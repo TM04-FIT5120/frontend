@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, MapPin, ArrowRight, X, ChevronRight } from 'lucide-react'
+import { Search, MapPin, X, ChevronRight } from 'lucide-react'
 import { locations } from '@/data/locations'
 import { getAQIMeta, aqiPercent } from '@/utils/aqiHelpers'
 

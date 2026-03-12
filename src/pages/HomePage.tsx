@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Navigation, Loader2, MapPin, Wind, Activity,
+  Navigation, Loader2, MapPin, Activity,
   CheckCircle2, AlertTriangle, ArrowRight, Gauge,
-  TrendingUp, ChevronRight,
+  ChevronRight,
 } from 'lucide-react'
 import { locations } from '@/data/locations'
 import { getAQIMeta, aqiPercent } from '@/utils/aqiHelpers'
