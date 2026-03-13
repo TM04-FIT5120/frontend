@@ -69,5 +69,5 @@ export function getStatusColor(status: string): string {
 }
 
 export function aqiPercent(aqi: number): number {
-  return Math.min((aqi / 300) * 100, 100)
+  return Math.min((aqi / 500) * 100, 100)
 }

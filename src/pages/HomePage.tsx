@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Navigation, Loader2, MapPin, Activity,
-  CheckCircle2, AlertTriangle, ArrowRight, Gauge,
+  Navigation, Loader2, MapPin,
+  CheckCircle2, AlertTriangle, ArrowRight,
   ChevronRight,
 } from 'lucide-react'
 import { locations } from '@/data/locations'
@@ -12,7 +12,7 @@ import { getAQIMeta, aqiPercent } from '@/utils/aqiHelpers'
 function AQIRing({ aqi, color, size = 120 }: { aqi: number; color: string; size?: number }) {
   const r    = (size / 2) - 10
   const circ = 2 * Math.PI * r
-  const pct  = Math.min(aqi / 300, 1)
+  const pct  = Math.min(aqi / 500, 1)
   return (
     <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
@@ -25,7 +25,7 @@ function AQIRing({ aqi, color, size = 120 }: { aqi: number; color: string; size?
         />
       </svg>
       <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: size > 100 ? '1.8rem' : '1.3rem', fontWeight: 800, color, lineHeight: 1 }}>{aqi}</span>
+        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: size > 100 ? '1.5rem' : '1.3rem', fontWeight: 800, color, lineHeight: 1 }}>{aqi}</span>
         <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', fontWeight: 600, color: '#8a96a8', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 2 }}>AQI</span>
       </div>
     </div>
@@ -94,7 +94,7 @@ function FeaturedCard({ loc }: { loc: (typeof locations)[0] }) {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 14 }}>
-        <AQIRing aqi={loc.aqi} color={meta.color} size={100} />
+        <AQIRing aqi={loc.aqi} color={meta.color} size={120} />
         <div style={{ flex: 1 }}>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.88rem', color: '#4a5568', lineHeight: 1.65, margin: '0 0 10px' }}>{loc.description}</p>
           <div style={{ background: meta.bgColor, border: `1px solid ${meta.borderColor}`, borderRadius: 10, padding: '0.55rem 0.85rem' }}>
@@ -121,7 +121,6 @@ export function HomePage() {
 
   const goodCount = locations.filter(l => l.status === 'good').length
   const warnCount = locations.filter(l => ['hazardous','very-unhealthy','unhealthy'].includes(l.status)).length
-  const avgAQI    = (locations.reduce((s, l) => s + l.aqi, 0) / locations.length).toFixed(1)
   const featured  = [locations[0], locations[1]]
 
   const handleGetLocation = () => {
@@ -203,19 +202,15 @@ export function HomePage() {
       </div>
 
       {/* ── Stats row ───────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-3 gap-4">
         {[
-          { icon: Gauge,         label: 'Stations',      value: locations.length, color: '#1d4ed8', bg: '#eff6ff' },
-          { icon: CheckCircle2,  label: 'Good Air',       value: goodCount,        color: '#059669', bg: '#ecfdf5' },
-          { icon: AlertTriangle, label: 'Need Attention', value: warnCount,        color: '#ea580c', bg: '#fff7ed' },
-          { icon: Activity,      label: 'Avg AQI',        value: avgAQI,           color: '#d97706', bg: '#fffbeb' },
+          { label: 'Total Locations', value: locations.length, color: '#1d4ed8', bg: '#eff6ff' },
+          { label: 'Good Air',        value: goodCount,        color: '#059669', bg: '#ecfdf5' },
+          { label: 'Need Attention',  value: warnCount,        color: '#ea580c', bg: '#fff7ed' },
         ].map((s, i) => (
-          <div key={s.label} className="card animate-fade-up" style={{ padding: '1.25rem', animationDelay: `${i * 70}ms` }}>
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
-              <s.icon size={20} color={s.color} />
-            </div>
-            <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '2rem', fontWeight: 800, color: '#1a2332', lineHeight: 1 }}>{s.value}</div>
-            <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', color: '#8a96a8', marginTop: 4, fontWeight: 500 }}>{s.label}</div>
+          <div key={s.label} className="animate-fade-up" style={{ padding: '1.25rem', animationDelay: `${i * 70}ms`, background: s.bg, borderRadius: 16 }}>
+            <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '2rem', fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.value}</div>
+            <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', color: s.color, marginTop: 4, fontWeight: 500 }}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -290,7 +285,6 @@ export function HomePage() {
 
         {/* Featured column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <p className="label-sm">Featured Stations</p>
           {featured.map(loc => <FeaturedCard key={loc.id} loc={loc} />)}
         </div>
       </div>

@@ -57,7 +57,7 @@ function AQIRing({ aqi, color, size = 120 }: { aqi: number; color: string; size?
           style={{ transition: 'all 1s cubic-bezier(0.4,0,0.2,1)' }} />
       </svg>
       <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.8rem', fontWeight: 800, color, lineHeight: 1 }}>{aqi}</span>
+        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.5rem', fontWeight: 800, color, lineHeight: 1 }}>{aqi}</span>
         <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', fontWeight: 600, color: '#8a96a8', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 2 }}>AQI</span>
       </div>
     </div>

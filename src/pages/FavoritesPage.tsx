@@ -22,12 +22,9 @@ export function FavoritesPage() {
         <div>
           <p className="label-sm" style={{ marginBottom: 10 }}>Saved Stations</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 14, background: '#fef2f2', border: '1px solid #fecaca', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Heart size={20} fill="#dc2626" color="#dc2626" />
-            </div>
             <h1 style={{ fontFamily: 'Inter, sans-serif', fontSize: '2rem', fontWeight: 800, margin: 0, color: '#1a2332', letterSpacing: '-0.02em' }}>My Favourites</h1>
           </div>
-          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.88rem', color: '#8a96a8', margin: 0, paddingLeft: 56, fontWeight: 500 }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.88rem', color: '#8a96a8', margin: 0, fontWeight: 500 }}>
             {favorites.length} saved location{favorites.length !== 1 ? 's' : ''}
           </p>
         </div>
