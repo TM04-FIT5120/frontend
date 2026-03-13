@@ -12,7 +12,7 @@ import { getAQIMeta, aqiPercent } from '@/utils/aqiHelpers'
 function AQIDonut({ aqi, color, size = 160 }: { aqi: number; color: string; size?: number }) {
   const r   = (size / 2) - 11
   const c   = 2 * Math.PI * r
-  const pct = Math.min(aqi / 300, 1)
+  const pct = Math.min(aqi / 500, 1)
   return (
     <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
@@ -24,7 +24,7 @@ function AQIDonut({ aqi, color, size = 160 }: { aqi: number; color: string; size
         />
       </svg>
       <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '2.4rem', fontWeight: 800, color, lineHeight: 1 }}>{aqi}</span>
+        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '2.0rem', fontWeight: 800, color, lineHeight: 1 }}>{aqi}</span>
         <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.65rem', fontWeight: 700, color: '#8a96a8', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 3 }}>AQI</span>
       </div>
     </div>
@@ -125,12 +125,12 @@ export function LocationDetailPage() {
 
           <div style={{ flex: 1, minWidth: 200 }}>
             {/* AQI scale */}
-            <p className="label-sm" style={{ marginBottom: 8 }}>AQI Scale (0–300+)</p>
+            <p className="label-sm" style={{ marginBottom: 8 }}>AQI Scale (0–500+)</p>
             <div style={{ position: 'relative', height: 8, borderRadius: 999, background: 'linear-gradient(90deg, #059669 0%, #d97706 30%, #ea580c 55%, #dc2626 78%, #7c3aed 100%)', marginBottom: 4 }}>
               <div style={{ position: 'absolute', top: '50%', left: `${pct}%`, transform: 'translate(-50%, -50%)', width: 18, height: 18, borderRadius: '50%', background: '#fff', border: `3px solid ${color}`, boxShadow: '0 1px 6px rgba(0,0,0,0.15)', transition: 'left 1s cubic-bezier(0.4,0,0.2,1)' }} />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-              {['0','50','100','200','300+'].map(v => <span key={v} style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.65rem', color: '#8a96a8', fontWeight: 500 }}>{v}</span>)}
+              {['0','50','100','200','300','400','500+'].map(v => <span key={v} style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.65rem', color: '#8a96a8', fontWeight: 500 }}>{v}</span>)}
             </div>
 
             {/* Description */}
