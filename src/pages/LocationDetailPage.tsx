@@ -5,8 +5,8 @@ import {
   TrendingUp, TrendingDown, Clock, Shield, AlertTriangle,
   CheckCircle2,
 } from 'lucide-react'
-import { locations } from '@/data/locations'
 import { getAQIMeta, aqiPercent } from '@/utils/aqiHelpers'
+import { useLocationDetail } from '@/hooks/useLocationDetail'
 
 // ── Donut gauge ────────────────────────────────────────────────────────────────
 function AQIDonut({ aqi, color, size = 160 }: { aqi: number; color: string; size?: number }) {
@@ -52,7 +52,7 @@ export function LocationDetailPage() {
   const navigate     = useNavigate()
   const [fav, setFav] = useState(false)
 
-  const location = locations.find(l => l.name === decodeURIComponent(cityName ?? ''))
+  const { location } = useLocationDetail(decodeURIComponent(cityName ?? ''))
 
   if (!location) {
     return (
@@ -69,18 +69,23 @@ export function LocationDetailPage() {
   const meta  = getAQIMeta(location.status)
   const color = meta.color
   const pct   = aqiPercent(location.aqi)
-  const trend = 5.4
 
-  const history = [
-    { d: 'Mon', v: Math.max(location.aqi - 22, 5) },
-    { d: 'Tue', v: Math.max(location.aqi - 15, 5) },
-    { d: 'Wed', v: Math.max(location.aqi - 9,  5) },
-    { d: 'Thu', v: Math.max(location.aqi - 4,  5) },
-    { d: 'Fri', v: location.aqi },
-    { d: 'Sat', v: location.aqi + 6 },
-    { d: 'Sun', v: location.aqi + 12 },
-  ]
-  const maxV = Math.max(...history.map(d => d.v))
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const history = location.forecast7d
+    ? location.forecast7d.map(d => ({ d: days[new Date(d.date).getDay()], v: d.aqi }))
+    : [
+        { d: 'Mon', v: Math.max(location.aqi - 22, 5) },
+        { d: 'Tue', v: Math.max(location.aqi - 15, 5) },
+        { d: 'Wed', v: Math.max(location.aqi - 9,  5) },
+        { d: 'Thu', v: Math.max(location.aqi - 4,  5) },
+        { d: 'Fri', v: location.aqi },
+        { d: 'Sat', v: location.aqi + 6 },
+        { d: 'Sun', v: location.aqi + 12 },
+      ]
+  const maxV  = Math.max(...history.map(d => d.v))
+  const trend = history.length >= 2
+    ? +(history[history.length - 1].v - history[0].v).toFixed(1)
+    : 5.4
 
   return (
     <div className="mx-auto animate-fade-in" style={{ maxWidth: 860, display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -92,7 +97,7 @@ export function LocationDetailPage() {
         </button>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f1f5f9', borderRadius: 10, padding: '0.4rem 0.85rem', fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: '#8a96a8', fontWeight: 500 }}>
-            <Clock size={13} />Updated now
+            <Clock size={13} />{location.updateTime ?? 'Updated now'}
           </div>
           <button
             onClick={() => setFav(!fav)}
@@ -149,10 +154,10 @@ export function LocationDetailPage() {
 
       {/* ── Metric cards ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <MetricCard icon={Wind}     label="PM2.5"    value={(location.aqi * 0.4).toFixed(1)} unit="µg/m³"    color="#1d4ed8" bg="#eff6ff" />
-        <MetricCard icon={Droplets} label="Humidity" value="65"                               unit="%"        color="#059669" bg="#ecfdf5" />
-        <MetricCard icon={Eye}      label="Visibility" value="8.5"                            unit="km"       color="#7c3aed" bg="#f5f3ff" />
-        <MetricCard icon={trend > 0 ? TrendingUp : TrendingDown} label="Trend" value={`${trend > 0 ? '+' : ''}${trend}`} unit="vs prev day" color={trend > 0 ? '#dc2626' : '#059669'} bg={trend > 0 ? '#fef2f2' : '#ecfdf5'} />
+        <MetricCard icon={Wind}     label="PM2.5"    value={(location.pm25 ?? location.aqi * 0.4).toFixed(1)} unit="µg/m³"    color="#1d4ed8" bg="#eff6ff" />
+        <MetricCard icon={Droplets} label="Humidity" value={String(location.humidity ?? 65)}                  unit="%"        color="#059669" bg="#ecfdf5" />
+        <MetricCard icon={Eye}      label="Temperature" value={location.temperature != null ? String(location.temperature) : '—'} unit="°C" color="#7c3aed" bg="#f5f3ff" />
+        <MetricCard icon={trend > 0 ? TrendingUp : TrendingDown} label="Trend" value={`${trend > 0 ? '+' : ''}${trend}`} unit="7-day change" color={trend > 0 ? '#dc2626' : '#059669'} bg={trend > 0 ? '#fef2f2' : '#ecfdf5'} />
       </div>
 
       {/* ── 7-day chart ───────────────────────────────────────────────────────── */}

@@ -1,3 +1,9 @@
+export interface ForecastDay {
+  date: string
+  aqi: number
+  level: string
+}
+
 export interface Location {
   id: string
   name: string
@@ -6,6 +12,14 @@ export interface Location {
   aqi: number
   status: 'good' | 'moderate' | 'unhealthy' | 'hazardous'
   description: string
+  // Real-time fields populated from API
+  pm25?: number
+  pm10?: number
+  humidity?: number
+  temperature?: number
+  updateTime?: string
+  forecast?: number[]
+  forecast7d?: ForecastDay[]
 }
 
 export const locations: Location[] = [
@@ -111,6 +125,25 @@ export function getStatusLabel(status: string): string {
       return 'Hazardous'
     default:
       return 'Unknown'
+  }
+}
+
+export function levelToStatus(level: string): Location['status'] {
+  const l = level.toLowerCase()
+  if (l === 'good') return 'good'
+  if (l === 'moderate') return 'moderate'
+  if (l.includes('unhealthy')) return 'unhealthy'
+  if (l === 'very unhealthy' || l === 'hazardous') return 'hazardous'
+  return 'moderate'
+}
+
+export function getStatusDescription(status: Location['status']): string {
+  switch (status) {
+    case 'good':      return 'Air quality is good. Enjoy outdoor activities!'
+    case 'moderate':  return 'Air quality is moderate. Sensitive groups should limit prolonged outdoor exertion.'
+    case 'unhealthy': return 'Air quality is unhealthy. Consider reducing outdoor activities.'
+    case 'hazardous': return 'Air quality is hazardous. Avoid outdoor activities.'
+    default:          return 'Air quality data unavailable.'
   }
 }
 

@@ -1,14 +1,15 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, MapPin, X, ChevronRight } from 'lucide-react'
-import { locations } from '@/data/locations'
 import { getAQIMeta, aqiPercent } from '@/utils/aqiHelpers'
+import { useLocations } from '@/hooks/useLocations'
 
 export function SearchPage() {
   const [query,   setQuery]   = useState('')
   const [focused, setFocused] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
+  const { locations } = useLocations()
 
   const filtered = query.trim()
     ? locations.filter(l => l.name.toLowerCase().includes(query.toLowerCase()))

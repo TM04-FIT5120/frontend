@@ -1,17 +1,20 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Heart, Trash2, MapPin, ArrowRight, BookmarkPlus } from 'lucide-react'
-import { locations } from '@/data/locations'
 import { getAQIMeta, aqiPercent } from '@/utils/aqiHelpers'
+import { useLocations } from '@/hooks/useLocations'
 
 export function FavoritesPage() {
   const navigate = useNavigate()
-  const [favorites, setFavorites] = useState([locations[1], locations[4]])
-  const [removing,  setRemoving]  = useState<string | null>(null)
+  const { locations } = useLocations()
+  const [favoriteIds, setFavoriteIds] = useState<string[]>(['2', '5']) // Penang & Kota Kinabalu
+  const [removing,    setRemoving]    = useState<string | null>(null)
+
+  const favorites = locations.filter(l => favoriteIds.includes(l.id))
 
   const handleRemove = (id: string) => {
     setRemoving(id)
-    setTimeout(() => { setFavorites(p => p.filter(l => l.id !== id)); setRemoving(null) }, 350)
+    setTimeout(() => { setFavoriteIds(p => p.filter(i => i !== id)); setRemoving(null) }, 350)
   }
 
   return (

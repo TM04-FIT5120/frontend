@@ -5,8 +5,9 @@ import {
   CheckCircle2, AlertTriangle, ArrowRight,
   ChevronRight,
 } from 'lucide-react'
-import { locations } from '@/data/locations'
+import type { Location } from '@/data/locations'
 import { getAQIMeta, aqiPercent } from '@/utils/aqiHelpers'
+import { useLocations } from '@/hooks/useLocations'
 
 // ── AQI ring gauge ────────────────────────────────────────────────────────────
 function AQIRing({ aqi, color, size = 120 }: { aqi: number; color: string; size?: number }) {
@@ -33,7 +34,7 @@ function AQIRing({ aqi, color, size = 120 }: { aqi: number; color: string; size?
 }
 
 // ── Station card ──────────────────────────────────────────────────────────────
-function StationCard({ loc, delay }: { loc: (typeof locations)[0]; delay: number }) {
+function StationCard({ loc, delay }: { loc: Location; delay: number }) {
   const navigate = useNavigate()
   const meta     = getAQIMeta(loc.status)
 
@@ -71,7 +72,7 @@ function StationCard({ loc, delay }: { loc: (typeof locations)[0]; delay: number
 }
 
 // ── Featured card ─────────────────────────────────────────────────────────────
-function FeaturedCard({ loc }: { loc: (typeof locations)[0] }) {
+function FeaturedCard({ loc }: { loc: Location }) {
   const navigate = useNavigate()
   const meta     = getAQIMeta(loc.status)
 
@@ -118,6 +119,8 @@ export function HomePage() {
   const [userLoc, setUserLoc]       = useState<{ lat: number; lng: number } | null>(null)
   const [isLocating, setIsLocating] = useState(false)
   const [locError, setLocError]     = useState<string | null>(null)
+
+  const { locations } = useLocations()
 
   const goodCount = locations.filter(l => l.status === 'good').length
   const warnCount = locations.filter(l => ['hazardous','very-unhealthy','unhealthy'].includes(l.status)).length

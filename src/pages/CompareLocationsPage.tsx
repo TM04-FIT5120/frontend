@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { ArrowRightLeft, TrendingDown, TrendingUp, Shield, ChevronDown } from 'lucide-react'
-import { locations } from '@/data/locations'
+import type { Location } from '@/data/locations'
 import { getAQIMeta, aqiPercent } from '@/utils/aqiHelpers'
+import { useLocations } from '@/hooks/useLocations'
 
 // ── Dropdown ──────────────────────────────────────────────────────────────────
-function StationSelect({ value, onChange, exclude, label }: {
-  value: string; onChange: (id: string) => void; exclude?: string; label: string
+function StationSelect({ value, onChange, exclude, label, locations }: {
+  value: string; onChange: (id: string) => void; exclude?: string; label: string; locations: Location[]
 }) {
   return (
     <div>
@@ -65,7 +66,7 @@ function AQIRing({ aqi, color, size = 120 }: { aqi: number; color: string; size?
 }
 
 // ── Location panel ────────────────────────────────────────────────────────────
-function LocPanel({ loc, isWinner }: { loc: typeof locations[0]; isWinner: boolean }) {
+function LocPanel({ loc, isWinner }: { loc: Location; isWinner: boolean }) {
   const meta = getAQIMeta(loc.status)
   return (
     <div className="card" style={{ overflow: 'hidden', border: isWinner ? `1.5px solid ${meta.color}50` : undefined, boxShadow: isWinner ? `var(--shadow-hover), 0 0 0 1px ${meta.color}20` : undefined }}>
@@ -117,6 +118,7 @@ function LocPanel({ loc, isWinner }: { loc: typeof locations[0]; isWinner: boole
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export function CompareLocationsPage() {
+  const { locations } = useLocations()
   const [loc1Id, setLoc1Id] = useState(locations[0].id)
   const [loc2Id, setLoc2Id] = useState(locations[1].id)
 
@@ -140,7 +142,7 @@ export function CompareLocationsPage() {
       {/* ── Selectors ───────────────────────────────────────────────────────── */}
       <div className="card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'end', gap: '1rem' }}>
-          <StationSelect value={loc1Id} onChange={setLoc1Id} exclude={loc2Id} label="First Station" />
+          <StationSelect value={loc1Id} onChange={setLoc1Id} exclude={loc2Id} label="First Station" locations={locations} />
           <button
             onClick={() => { setLoc1Id(loc2Id); setLoc2Id(loc1Id) }}
             style={{ padding: '0.75rem', borderRadius: 12, background: '#eff6ff', border: '1.5px solid #bfdbfe', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#1d4ed8', transition: 'all 0.2s', alignSelf: 'flex-end' }}
@@ -148,7 +150,7 @@ export function CompareLocationsPage() {
           >
             <ArrowRightLeft size={18} />
           </button>
-          <StationSelect value={loc2Id} onChange={setLoc2Id} exclude={loc1Id} label="Second Station" />
+          <StationSelect value={loc2Id} onChange={setLoc2Id} exclude={loc1Id} label="Second Station" locations={locations} />
         </div>
       </div>
 
