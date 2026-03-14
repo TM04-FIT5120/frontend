@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft, Heart, MapPin, Wind, Droplets, Eye,
@@ -7,6 +6,7 @@ import {
 } from 'lucide-react'
 import { getAQIMeta, aqiPercent } from '@/utils/aqiHelpers'
 import { useLocationDetail } from '@/hooks/useLocationDetail'
+import { useAppContext } from '@/context/AppContext'
 
 // ── Donut gauge ────────────────────────────────────────────────────────────────
 function AQIDonut({ aqi, color, size = 160 }: { aqi: number; color: string; size?: number }) {
@@ -50,7 +50,7 @@ function MetricCard({ icon: Icon, label, value, unit, color, bg }: {
 export function LocationDetailPage() {
   const { cityName } = useParams()
   const navigate     = useNavigate()
-  const [fav, setFav] = useState(false)
+  const { toggleFavorite, isFavorite } = useAppContext()
 
   const { location } = useLocationDetail(decodeURIComponent(cityName ?? ''))
 
@@ -100,10 +100,10 @@ export function LocationDetailPage() {
             <Clock size={13} />{location.updateTime ?? 'Updated now'}
           </div>
           <button
-            onClick={() => setFav(!fav)}
-            style={{ padding: '0.5rem', borderRadius: 12, background: fav ? '#fef2f2' : '#f1f5f9', border: `1.5px solid ${fav ? '#fecaca' : '#e4e9f0'}`, cursor: 'pointer', display: 'flex', color: fav ? '#dc2626' : '#8a96a8', transition: 'all 0.2s' }}
+            onClick={() => location && toggleFavorite(location.id)}
+            style={{ padding: '0.5rem', borderRadius: 12, background: location && isFavorite(location.id) ? '#fef2f2' : '#f1f5f9', border: `1.5px solid ${location && isFavorite(location.id) ? '#fecaca' : '#e4e9f0'}`, cursor: 'pointer', display: 'flex', color: location && isFavorite(location.id) ? '#dc2626' : '#8a96a8', transition: 'all 0.2s' }}
           >
-            <Heart size={20} fill={fav ? '#dc2626' : 'none'} />
+            <Heart size={20} fill={location && isFavorite(location.id) ? '#dc2626' : 'none'} />
           </button>
         </div>
       </div>
@@ -131,11 +131,11 @@ export function LocationDetailPage() {
           <div style={{ flex: 1, minWidth: 200 }}>
             {/* AQI scale */}
             <p className="label-sm" style={{ marginBottom: 8 }}>AQI Scale (0–500+)</p>
-            <div style={{ position: 'relative', height: 8, borderRadius: 999, background: 'linear-gradient(90deg, #059669 0%, #d97706 30%, #ea580c 55%, #dc2626 78%, #7c3aed 100%)', marginBottom: 4 }}>
+            <div style={{ position: 'relative', height: 8, borderRadius: 999, background: 'linear-gradient(90deg, #059669 0%, #d97706 30%, #ea580c 55%, #dc2626 78%, #7c3aed 100%)', marginBottom: 6 }}>
               <div style={{ position: 'absolute', top: '50%', left: `${pct}%`, transform: 'translate(-50%, -50%)', width: 18, height: 18, borderRadius: '50%', background: '#fff', border: `3px solid ${color}`, boxShadow: '0 1px 6px rgba(0,0,0,0.15)', transition: 'left 1s cubic-bezier(0.4,0,0.2,1)' }} />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-              {['0','50','100','200','300','400','500+'].map(v => <span key={v} style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.65rem', color: '#8a96a8', fontWeight: 500 }}>{v}</span>)}
+              {['0','100','200','300','400','500+'].map(v => <span key={v} style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.65rem', color: '#8a96a8', fontWeight: 500 }}>{v}</span>)}
             </div>
 
             {/* Description */}

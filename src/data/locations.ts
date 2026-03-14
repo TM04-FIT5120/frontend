@@ -30,7 +30,7 @@ export const locations: Location[] = [
     lng: 101.687,
     aqi: 214.78,
     status: 'hazardous',
-    description: 'Air quality is good. Enjoy outdoor activities!',
+    description: 'Air quality is hazardous. Consider staying indoors and using air purifiers!',
   },
   {
     id: '2',
@@ -39,7 +39,7 @@ export const locations: Location[] = [
     lng: 100.329,
     aqi: 25.38,
     status: 'good',
-    description: 'Air quality is unhooly. Limit outdoor activities!',
+    description: 'Air quality is very good. Enjoy your day outdoors!',
   },
   {
     id: '3',
