@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Calendar, TrendingUp, AlertTriangle, Shield, MapPin } from 'lucide-react'
-import { getAQIMeta } from '@/utils/aqiHelpers'
+// import { getAQIMeta } from '@/utils/aqiHelpers'
 import { aqiToStatus } from '@/api/api'
 import type { Location } from '@/data/locations'
 import { useLocations } from '@/hooks/useLocations'
@@ -39,7 +39,7 @@ function ShortTermTab({ location }: { location: Location }) {
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
   // First day as "Next 24 hours" / next day
-  const next24h = forecast[0]
+  // const next24h = forecast[0]
   const hasUnhealthy = forecast.some(d => {
     const s = aqiToStatus(d.aqi)
     return s === 'unhealthy' || s === 'very-unhealthy' || s === 'hazardous'

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { MapPin, BarChart2, Search, Heart, Settings, Image, ChevronRight, ZoomIn, ZoomOut, X, Calendar, TrendingUp } from 'lucide-react'
+import { MapPin, Search, Heart, Settings, Image, ChevronRight, ZoomIn, ZoomOut, X, TrendingUp } from 'lucide-react'
 
 // ── Lightbox ────────────────────────────────────────────────────────────────────
 function Lightbox({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
