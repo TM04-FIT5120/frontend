@@ -1,11 +1,10 @@
 import { Link, NavLink } from 'react-router-dom'
-import { useAppContext } from '@/context/AppContext'
+import { strings } from '@/strings'
 
 const navLinkBase =
   'px-3 py-2 text-sm font-semibold rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-600'
 
 export function Header() {
-  const { t } = useAppContext()
 
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/90 backdrop-blur-sm shadow-sm">
@@ -33,7 +32,8 @@ export function Header() {
           {[
             { to: '/',         end: true,  key: 'nav_home'      },
             { to: '/guide',    end: false, key: 'nav_guide'     },
-            { to: '/compare',  end: false, key: 'nav_compare'   },
+            { to: '/forecast', end: false, key: 'nav_forecast'  },
+            // { to: '/compare',  end: false, key: 'nav_compare'   },
             { to: '/search',   end: false, key: 'nav_search'    },
             { to: '/favorites',end: false, key: 'nav_favorites' },
             { to: '/settings', end: false, key: 'nav_settings'  },
@@ -46,7 +46,7 @@ export function Header() {
                 `${navLinkBase} ${isActive ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`
               }
             >
-              {t(key)}
+              {strings[key]}
             </NavLink>
           ))}
         </nav>

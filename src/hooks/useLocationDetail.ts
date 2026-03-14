@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { locations as staticLocations } from '@/data/locations'
-import { fetchAirQualityByCity, apiDataToLocation } from '@/api/api'
+import { fetchAirQualityByCity, apiDataToLocation, airQualityToLocation } from '@/api/api'
 import type { Location } from '@/data/locations'
 
 export function useLocationDetail(cityName: string) {
@@ -10,14 +10,14 @@ export function useLocationDetail(cityName: string) {
     queryKey: ['location', cityName],
     queryFn: () =>
       fetchAirQualityByCity(cityName).then(apiData =>
-        staticLoc ? apiDataToLocation(staticLoc, apiData) : null
+        staticLoc ? apiDataToLocation(staticLoc, apiData) : airQualityToLocation(apiData)
       ),
     enabled: !!cityName,
     retry: 1,
     staleTime: 5 * 60 * 1000,
   })
 
-  // Fall back to static data on error or while loading
+  // Fall back to static data on error or while loading (only for known static locations)
   const location: Location | null = data ?? staticLoc ?? null
 
   return { location, isLoading, isError }

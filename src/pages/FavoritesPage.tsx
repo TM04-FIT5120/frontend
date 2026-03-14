@@ -3,19 +3,21 @@ import { Heart, Trash2, MapPin, ArrowRight, BookmarkPlus } from 'lucide-react'
 import { getAQIMeta, aqiPercent } from '@/utils/aqiHelpers'
 import { useLocations } from '@/hooks/useLocations'
 import { useAppContext } from '@/context/AppContext'
+import { strings } from '@/strings'
+import type { Location } from '@/data/locations'
 import { useState } from 'react'
 
 export function FavoritesPage() {
   const navigate = useNavigate()
   const { locations } = useLocations()
-  const { favoriteIds, toggleFavorite, t } = useAppContext()
+  const { favoriteIds, toggleFavorite } = useAppContext()
   const [removing, setRemoving] = useState<string | null>(null)
 
   const favorites = locations.filter(l => favoriteIds.includes(l.id))
 
-  const handleRemove = (id: string) => {
-    setRemoving(id)
-    setTimeout(() => { toggleFavorite(id); setRemoving(null) }, 350)
+  const handleRemove = (loc: Location) => {
+    setRemoving(loc.id)
+    setTimeout(() => { toggleFavorite(loc); setRemoving(null) }, 350)
   }
 
   const count = favorites.length
@@ -26,16 +28,16 @@ export function FavoritesPage() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '2rem', flexWrap: 'wrap', gap: 16 }}>
         <div>
-          <p className="label-sm" style={{ marginBottom: 10 }}>{t('fav_subtitle')}</p>
+          <p className="label-sm" style={{ marginBottom: 10 }}>{strings['fav_subtitle']}</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
-            <h1 style={{ fontFamily: 'Inter, sans-serif', fontSize: '2rem', fontWeight: 800, margin: 0, color: '#1a2332', letterSpacing: '-0.02em' }}>{t('fav_title')}</h1>
+            <h1 style={{ fontFamily: 'Inter, sans-serif', fontSize: '2rem', fontWeight: 800, margin: 0, color: '#1a2332', letterSpacing: '-0.02em' }}>{strings['fav_title']}</h1>
           </div>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.88rem', color: '#8a96a8', margin: 0, fontWeight: 500 }}>
-            {count} {count === 1 ? t('fav_saved_one') : t('fav_saved_many')}
+            {count} {count === 1 ? strings['fav_saved_one'] : strings['fav_saved_many']}
           </p>
         </div>
         <button onClick={() => navigate('/search')} className="btn btn-primary">
-          <BookmarkPlus size={16} />{t('fav_add')}
+          <BookmarkPlus size={16} />{strings['fav_add']}
         </button>
       </div>
 
@@ -66,7 +68,7 @@ export function FavoritesPage() {
                   <div onClick={() => navigate(`/location/${encodeURIComponent(loc.name)}`)} style={{ flex: 1, cursor: 'pointer' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
                       <h3 style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.2rem', fontWeight: 700, color: '#1a2332', margin: 0 }}>{loc.name}</h3>
-                      <span className={`aqi-chip ${meta.chipClass}`}>{meta.label}</span>
+                      <span className={`aqi-chip ${meta.chipClass}`}>{strings[loc.status === 'very-unhealthy' ? 'status_very_unhealthy' : 'status_' + loc.status]}</span>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 10 }}>
@@ -90,7 +92,7 @@ export function FavoritesPage() {
                   </div>
 
                   {/* Remove button */}
-                  <button onClick={() => handleRemove(loc.id)} className="btn btn-danger" style={{ flexShrink: 0, padding: '0.5rem' }} aria-label="Remove from favourites">
+                  <button onClick={() => handleRemove(loc)} className="btn btn-danger" style={{ flexShrink: 0, padding: '0.5rem' }} aria-label="Remove from favourites">
                     <Trash2 size={16} />
                   </button>
                 </div>
@@ -104,11 +106,11 @@ export function FavoritesPage() {
             <Heart size={32} color="#fca5a5" />
           </div>
           <div>
-            <h3 style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '1.3rem', color: '#1a2332', margin: '0 0 8px' }}>{t('fav_empty_title')}</h3>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', color: '#8a96a8', margin: 0, maxWidth: 300 }}>{t('fav_empty_desc')}</p>
+            <h3 style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '1.3rem', color: '#1a2332', margin: '0 0 8px' }}>{strings['fav_empty_title']}</h3>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', color: '#8a96a8', margin: 0, maxWidth: 300 }}>{strings['fav_empty_desc']}</p>
           </div>
           <button onClick={() => navigate('/search')} className="btn btn-primary">
-            <MapPin size={16} />{t('fav_browse')}
+            <MapPin size={16} />{strings['fav_browse']}
           </button>
         </div>
       )}

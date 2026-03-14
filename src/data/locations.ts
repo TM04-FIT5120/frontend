@@ -1,7 +1,6 @@
 export interface ForecastDay {
-  date: string
-  aqi: number
-  level: string
+  date: string  // maps from pm25Forecast.day
+  aqi:  number  // maps from pm25Forecast.avg
 }
 
 export interface Location {
@@ -10,16 +9,17 @@ export interface Location {
   lat: number
   lng: number
   aqi: number
-  status: 'good' | 'moderate' | 'unhealthy' | 'hazardous'
+  status: 'good' | 'moderate' | 'unhealthy' | 'very-unhealthy' | 'hazardous'
   description: string
   // Real-time fields populated from API
-  pm25?: number
-  pm10?: number
-  humidity?: number
-  temperature?: number
-  updateTime?: string
-  forecast?: number[]
-  forecast7d?: ForecastDay[]
+  pm25?:           number
+  pm10?:           number
+  humidity?:       number
+  temperature?:    number
+  updateTime?:     string
+  recommendation?: string
+  forecast?:       number[]
+  forecast7d?:     ForecastDay[]
 }
 
 export const locations: Location[] = [
@@ -29,8 +29,8 @@ export const locations: Location[] = [
     lat: 3.139,
     lng: 101.687,
     aqi: 214.78,
-    status: 'hazardous',
-    description: 'Air quality is hazardous. Consider staying indoors and using air purifiers!',
+    status: 'very-unhealthy',
+    description: 'Air quality is very unhealthy. Avoid outdoor activities.',
   },
   {
     id: '2',
@@ -98,16 +98,19 @@ export const locations: Location[] = [
   },
 ]
 
+// AC 1.2.1: 0–50 Green, 51–100 Yellow, 101–200 Orange, 201–300 Red, >300 Dark red
 export function getStatusColor(status: string): string {
   switch (status) {
     case 'good':
-      return '#4ade80'
+      return '#059669'
     case 'moderate':
-      return '#facc15'
+      return '#eab308'
     case 'unhealthy':
-      return '#fb923c'
+      return '#ea580c'
+    case 'very-unhealthy':
+      return '#dc2626'
     case 'hazardous':
-      return '#ef4444'
+      return '#7f1d1d'
     default:
       return '#9ca3af'
   }
@@ -121,6 +124,8 @@ export function getStatusLabel(status: string): string {
       return 'Moderate'
     case 'unhealthy':
       return 'Unhealthy'
+    case 'very-unhealthy':
+      return 'Very Unhealthy'
     case 'hazardous':
       return 'Hazardous'
     default:
@@ -132,18 +137,20 @@ export function levelToStatus(level: string): Location['status'] {
   const l = level.toLowerCase()
   if (l === 'good') return 'good'
   if (l === 'moderate') return 'moderate'
-  if (l.includes('unhealthy')) return 'unhealthy'
-  if (l === 'very unhealthy' || l === 'hazardous') return 'hazardous'
+  if (l === 'very unhealthy' || l === 'very-unhealthy') return 'very-unhealthy'
+  if (l === 'unhealthy') return 'unhealthy'
+  if (l === 'hazardous') return 'hazardous'
   return 'moderate'
 }
 
 export function getStatusDescription(status: Location['status']): string {
   switch (status) {
-    case 'good':      return 'Air quality is good. Enjoy outdoor activities!'
-    case 'moderate':  return 'Air quality is moderate. Sensitive groups should limit prolonged outdoor exertion.'
-    case 'unhealthy': return 'Air quality is unhealthy. Consider reducing outdoor activities.'
-    case 'hazardous': return 'Air quality is hazardous. Avoid outdoor activities.'
-    default:          return 'Air quality data unavailable.'
+    case 'good':           return 'Air quality is good. Enjoy outdoor activities!'
+    case 'moderate':       return 'Air quality is moderate. Sensitive groups should limit prolonged outdoor exertion.'
+    case 'unhealthy':      return 'Air quality is unhealthy. Consider reducing outdoor activities.'
+    case 'very-unhealthy': return 'Air quality is very unhealthy. Avoid outdoor activities.'
+    case 'hazardous':      return 'Air quality is hazardous. Stay indoors when possible.'
+    default:               return 'Air quality data unavailable.'
   }
 }
 

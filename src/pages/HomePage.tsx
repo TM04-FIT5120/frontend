@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
+import { fetchAirQualityByCoords, airQualityToLocation } from '@/api/api'
 import { useNavigate } from 'react-router-dom'
 import {
   Navigation, Loader2, MapPin,
@@ -6,6 +7,7 @@ import {
   X, ShieldCheck, Wind, Thermometer,
   LocateFixed, Info,
 } from 'lucide-react'
+import { isApproachingHighRiskPeriod } from '@/pages/ForecastPage'
 import type { Location } from '@/data/locations'
 import { getAQIMeta, aqiPercent } from '@/utils/aqiHelpers'
 import { useLocations } from '@/hooks/useLocations'
@@ -97,13 +99,13 @@ function LocationConfirmModal({
 
 // ── AQI Scale bar ─────────────────────────────────────────────────────────────
 function AQIScaleBar({ aqi }: { aqi: number }) {
-  const pct = Math.min((aqi / 500) * 100, 100)
+  const pct = Math.min((aqi / 300) * 100, 100)
   return (
     <div>
       <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', fontWeight: 600, color: '#94a3b8', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 6px' }}>
         AQI Scale
       </p>
-      <div style={{ height: 7, borderRadius: 999, background: 'linear-gradient(90deg, #059669 0%, #d97706 33%, #ea580c 66%, #ef4444 85%, #7c3aed 100%)', marginBottom: 5 }} />
+      <div style={{ height: 7, borderRadius: 999, background: 'linear-gradient(90deg, #059669 0%, #eab308 20%, #ea580c 40%, #dc2626 60%, #7f1d1d 80%, #7f1d1d 100%)', marginBottom: 5 }} />
       <div style={{ position: 'relative', height: 12 }}>
         <div style={{
           position: 'absolute', top: 0,
@@ -113,7 +115,7 @@ function AQIScaleBar({ aqi }: { aqi: number }) {
           transform: 'translateX(-50%)',
         }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: '#94a3b8' }}>
-          <span>0</span><span>100</span><span>200</span><span>300</span><span>400</span><span>500+</span>
+          <span>0</span><span>50</span><span>100</span><span>150</span><span>200</span><span>250</span><span>300+</span>
         </div>
       </div>
     </div>
@@ -196,10 +198,39 @@ function LocationDetailPanel({
 
       <AQIScaleBar aqi={loc.aqi} />
 
+      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+        <button
+          type="button"
+          onClick={() => navigate(`/forecast?location=${encodeURIComponent(loc.name)}`)}
+          style={{
+            flex: 1, padding: '0.5rem 0.65rem',
+            background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 10,
+            fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '0.78rem',
+            color: '#475569', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+          }}
+        >
+          Short-term Forecast
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate(`/forecast?location=${encodeURIComponent(loc.name)}&tab=long`)}
+          style={{
+            flex: 1, padding: '0.5rem 0.65rem',
+            background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 10,
+            fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '0.78rem',
+            color: '#475569', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+          }}
+        >
+          Long-term Forecast
+        </button>
+      </div>
+
       <button
         onClick={() => navigate(`/location/${encodeURIComponent(loc.name)}`)}
         style={{
-          width: '100%', marginTop: 14, padding: '0.65rem',
+          width: '100%', marginTop: 10, padding: '0.65rem',
           background: meta.color, border: 'none', borderRadius: 10,
           fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '0.9rem',
           color: '#fff', cursor: 'pointer',
@@ -371,7 +402,7 @@ export function HomePage() {
   const goodCount = locations.filter(l => l.status === 'good').length
   const warnCount = locations.filter(l => ['hazardous', 'very-unhealthy', 'unhealthy'].includes(l.status)).length
 
-  const doGetLocation = () => {
+  const doGetLocation = useCallback(() => {
     setShowConfirm(false)
     setIsLocating(true)
     setLocError(null)
@@ -381,14 +412,19 @@ export function HomePage() {
       return
     }
     navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
+      async ({ coords }) => {
         const pos = { lat: coords.latitude, lng: coords.longitude }
         setUserLoc(pos)
-        setIsLocating(false)
-        // Auto-select nearest station
-        if (locations.length > 0) {
-          setSelectedLocation(findNearest(pos.lat, pos.lng, locations))
+        try {
+          const data = await fetchAirQualityByCoords(pos.lat, pos.lng)
+          setSelectedLocation(airQualityToLocation(data))
+        } catch {
+          // Fallback: find nearest from already-loaded static locations
+          if (locations.length > 0) {
+            setSelectedLocation(findNearest(pos.lat, pos.lng, locations))
+          }
         }
+        setIsLocating(false)
       },
       err => {
         setLocError(
@@ -399,7 +435,7 @@ export function HomePage() {
       },
       { enableHighAccuracy: true, timeout: 10000 },
     )
-  }
+  }, [locations])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }} className="animate-fade-in">
@@ -460,6 +496,39 @@ export function HomePage() {
           )}
         </div>
       </div>
+
+      {/* AC 2.2.2: Proactive high-risk season notice — links to Forecast / activity planning */}
+      {isApproachingHighRiskPeriod() && (
+        <div
+          role="alert"
+          className="card"
+          style={{
+            padding: '1rem 1.25rem',
+            background: '#fffbeb',
+            border: '1px solid #fde047',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 12,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <AlertTriangle size={22} color="#ca8a04" style={{ flexShrink: 0 }} />
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.95rem', color: '#1a2332', margin: 0, fontWeight: 500 }}>
+              Haze season is approaching. Consider planning indoor alternatives during this period.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/forecast')}
+            className="btn btn-primary"
+            style={{ fontSize: '0.85rem', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: 6 }}
+          >
+            View Forecast <ArrowRight size={14} />
+          </button>
+        </div>
+      )}
 
       {/* ── Stats row ────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-3 gap-4">
@@ -529,13 +598,14 @@ export function HomePage() {
             </div>
           </div>
 
-          {/* Legend */}
+          {/* Legend — AC 1.2.1 scale */}
           <div style={{ padding: '0.85rem 1.5rem 1.25rem', display: 'flex', flexWrap: 'wrap', gap: '0.35rem 1.1rem', flexShrink: 0 }}>
             {[
               ['#059669', 'Good (0–50)'],
-              ['#d97706', 'Moderate (51–100)'],
-              ['#ea580c', 'Unhealthy (101–150)'],
-              ['#7c3aed', 'Hazardous (151+)'],
+              ['#eab308', 'Moderate (51–100)'],
+              ['#ea580c', 'Unhealthy (101–200)'],
+              ['#dc2626', 'Very Unhealthy (201–300)'],
+              ['#7f1d1d', 'Hazardous (>300)'],
             ].map(([c, l]) => (
               <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'Inter, sans-serif', fontSize: '0.73rem', color: '#8a96a8', fontWeight: 500 }}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: c, flexShrink: 0 }} />
