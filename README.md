@@ -47,7 +47,6 @@ Shared data & context:
 
 - `data/locations.ts` – static location list and helpers (status color/label)
 - `context/AppContext.tsx` – app‑level context (extend as needed)
-- `context/AuthContext.tsx` – auth‑related context (currently placeholder)
 
 ---
 

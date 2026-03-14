@@ -1,18 +1,18 @@
-import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft, Heart, MapPin, Wind, Droplets, Eye,
   TrendingUp, TrendingDown, Clock, Shield, AlertTriangle,
-  CheckCircle2,
+  CheckCircle2, Calendar,
 } from 'lucide-react'
 import { getAQIMeta, aqiPercent } from '@/utils/aqiHelpers'
 import { useLocationDetail } from '@/hooks/useLocationDetail'
+import { useAppContext } from '@/context/AppContext'
 
 // ── Donut gauge ────────────────────────────────────────────────────────────────
 function AQIDonut({ aqi, color, size = 160 }: { aqi: number; color: string; size?: number }) {
   const r   = (size / 2) - 11
   const c   = 2 * Math.PI * r
-  const pct = Math.min(aqi / 500, 1)
+  const pct = Math.min(aqi / 300, 1)
   return (
     <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
@@ -47,10 +47,100 @@ function MetricCard({ icon: Icon, label, value, unit, color, bg }: {
   )
 }
 
+// ── 7-Day AQI line chart ────────────────────────────────────────────────────────
+function SevenDayLineChart({
+  history,
+  lineColor,
+}: {
+  history: { d: string; v: number }[]
+  lineColor: string
+}) {
+  const W = 600
+  const H = 160
+  const PAD = 20
+
+  const values  = history.map(h => h.v)
+  const maxV    = Math.max(...values)
+  const minV    = Math.min(...values)
+  const range   = maxV - minV || 1
+  const n       = history.length
+
+  const getX = (i: number) => PAD + (i / Math.max(n - 1, 1)) * (W - PAD * 2)
+  const getY = (v: number) => PAD + ((maxV - v) / range) * (H - PAD * 2)
+
+  const points  = history.map((item, i) => ({ x: getX(i), y: getY(item.v), v: item.v, d: item.d }))
+  const polyline = points.map(p => `${p.x},${p.y}`).join(' ')
+  const areaPath =
+    `M${points[0].x},${H} ` +
+    points.map(p => `L${p.x},${p.y}`).join(' ') +
+    ` L${points[points.length - 1].x},${H} Z`
+
+  return (
+    <div style={{ width: '100%', overflowX: 'auto' }}>
+      <svg
+        viewBox={`0 0 ${W} ${H + 40}`}
+        style={{ width: '100%', minWidth: 320, display: 'block' }}
+        aria-label="7-day AQI forecast line chart"
+      >
+        <defs>
+          <linearGradient id="aqiAreaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stopColor={lineColor} stopOpacity="0.28" />
+            <stop offset="100%" stopColor={lineColor} stopOpacity="0.02" />
+          </linearGradient>
+        </defs>
+
+        {/* Horizontal grid lines */}
+        {[0, 0.25, 0.5, 0.75, 1].map((t, i) => (
+          <line
+            key={i}
+            x1={PAD}           y1={PAD + t * (H - PAD * 2)}
+            x2={W - PAD}       y2={PAD + t * (H - PAD * 2)}
+            stroke="#f0f0f0"   strokeWidth="1"
+          />
+        ))}
+
+        {/* Gradient area fill */}
+        <path d={areaPath} fill="url(#aqiAreaGrad)" />
+
+        {/* Line */}
+        <polyline
+          points={polyline}
+          fill="none"
+          stroke={lineColor}
+          strokeWidth="2.5"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+
+        {/* Markers, value labels, day labels */}
+        {points.map((p, i) => (
+          <g key={i}>
+            <circle cx={p.x} cy={p.y} r="5" fill="white" stroke={lineColor} strokeWidth="2.5" />
+            <text
+              x={p.x} y={p.y - 10}
+              textAnchor="middle" fontSize="11"
+              fill="#374151" fontWeight="600" fontFamily="Inter, sans-serif"
+            >
+              {Math.round(p.v)}
+            </text>
+            <text
+              x={p.x} y={H + 30}
+              textAnchor="middle" fontSize="12"
+              fill="#9ca3af" fontFamily="Inter, sans-serif"
+            >
+              {p.d}
+            </text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
 export function LocationDetailPage() {
   const { cityName } = useParams()
   const navigate     = useNavigate()
-  const [fav, setFav] = useState(false)
+  const { toggleFavorite, isFavorite } = useAppContext()
 
   const { location } = useLocationDetail(decodeURIComponent(cityName ?? ''))
 
@@ -100,10 +190,10 @@ export function LocationDetailPage() {
             <Clock size={13} />{location.updateTime ?? 'Updated now'}
           </div>
           <button
-            onClick={() => setFav(!fav)}
-            style={{ padding: '0.5rem', borderRadius: 12, background: fav ? '#fef2f2' : '#f1f5f9', border: `1.5px solid ${fav ? '#fecaca' : '#e4e9f0'}`, cursor: 'pointer', display: 'flex', color: fav ? '#dc2626' : '#8a96a8', transition: 'all 0.2s' }}
+            onClick={() => location && toggleFavorite(location)}
+            style={{ padding: '0.5rem', borderRadius: 12, background: location && isFavorite(location.id) ? '#fef2f2' : '#f1f5f9', border: `1.5px solid ${location && isFavorite(location.id) ? '#fecaca' : '#e4e9f0'}`, cursor: 'pointer', display: 'flex', color: location && isFavorite(location.id) ? '#dc2626' : '#8a96a8', transition: 'all 0.2s' }}
           >
-            <Heart size={20} fill={fav ? '#dc2626' : 'none'} />
+            <Heart size={20} fill={location && isFavorite(location.id) ? '#dc2626' : 'none'} />
           </button>
         </div>
       </div>
@@ -130,12 +220,13 @@ export function LocationDetailPage() {
 
           <div style={{ flex: 1, minWidth: 200 }}>
             {/* AQI scale */}
-            <p className="label-sm" style={{ marginBottom: 8 }}>AQI Scale (0–500+)</p>
-            <div style={{ position: 'relative', height: 8, borderRadius: 999, background: 'linear-gradient(90deg, #059669 0%, #d97706 30%, #ea580c 55%, #dc2626 78%, #7c3aed 100%)', marginBottom: 4 }}>
+            <p className="label-sm" style={{ marginBottom: 8 }}>AQI Scale</p>
+            <p className="label-sm" style={{ marginBottom: 8 }}>0–50 Good, 51–100 Moderate, 101–200 Unhealthy, 201–300 Very Unhealthy, 300+ Hazardous</p>
+            <div style={{ position: 'relative', height: 8, borderRadius: 999, background: 'linear-gradient(90deg, #059669 0%, #eab308 20%, #ea580c 40%, #dc2626 60%, #7f1d1d 80%, #7f1d1d 100%)', marginBottom: 6 }}>
               <div style={{ position: 'absolute', top: '50%', left: `${pct}%`, transform: 'translate(-50%, -50%)', width: 18, height: 18, borderRadius: '50%', background: '#fff', border: `3px solid ${color}`, boxShadow: '0 1px 6px rgba(0,0,0,0.15)', transition: 'left 1s cubic-bezier(0.4,0,0.2,1)' }} />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-              {['0','50','100','200','300','400','500+'].map(v => <span key={v} style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.65rem', color: '#8a96a8', fontWeight: 500 }}>{v}</span>)}
+              {['0','50','100','150','200','250','300+'].map(v => <span key={v} style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.65rem', color: '#8a96a8', fontWeight: 500 }}>{v}</span>)}
             </div>
 
             {/* Description */}
@@ -152,6 +243,26 @@ export function LocationDetailPage() {
         </div>
       </div>
 
+      {/* ── Forecast links (AC 2.1 / 2.2) ─────────────────────────────────────── */}
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          onClick={() => navigate(`/forecast?location=${encodeURIComponent(location.name)}`)}
+          className="btn btn-outline"
+          style={{ flex: '1 1 180px', padding: '0.6rem 1rem', fontSize: '0.88rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+        >
+          <TrendingUp size={16} /> Short-term Forecast
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate(`/forecast?location=${encodeURIComponent(location.name)}&tab=long`)}
+          className="btn btn-outline"
+          style={{ flex: '1 1 180px', padding: '0.6rem 1rem', fontSize: '0.88rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+        >
+          <Calendar size={16} /> Long-term Forecast
+        </button>
+      </div>
+
       {/* ── Metric cards ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <MetricCard icon={Wind}     label="PM2.5"    value={(location.pm25 ?? location.aqi * 0.4).toFixed(1)} unit="µg/m³"    color="#1d4ed8" bg="#eff6ff" />
@@ -160,43 +271,33 @@ export function LocationDetailPage() {
         <MetricCard icon={trend > 0 ? TrendingUp : TrendingDown} label="Trend" value={`${trend > 0 ? '+' : ''}${trend}`} unit="7-day change" color={trend > 0 ? '#dc2626' : '#059669'} bg={trend > 0 ? '#fef2f2' : '#ecfdf5'} />
       </div>
 
-      {/* ── 7-day chart ───────────────────────────────────────────────────────── */}
+      {/* ── 7-Day AQI Forecast (line chart with area fill) ─────────────────────── */}
       <div className="card" style={{ padding: '1.75rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-          <div>
-            <p className="label-sm" style={{ marginBottom: 4 }}>Historical Data</p>
-            <h3 style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.15rem', fontWeight: 700, margin: 0, color: '#1a2332' }}>7-Day AQI Trend</h3>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: '#dc2626', fontWeight: 600 }}>
-            <TrendingUp size={15} />+{trend} this week
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: 8 }}>
+          <h3 style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.15rem', fontWeight: 700, margin: 0, color: '#1a2332' }}>7-Day AQI Forecast</h3>
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', color: '#8a96a8', fontWeight: 500 }}>Predicted air quality index</span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 160 }}>
-          {history.map((item, i) => {
-            const h     = ((item.v / maxV) * 80) + 8
-            const isNow = i === 4
-            return (
-              <div key={item.d} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                <div style={{ position: 'relative', width: '100%', height: 140, display: 'flex', alignItems: 'flex-end' }}>
-                  {isNow && (
-                    <div style={{ position: 'absolute', top: -24, left: '50%', transform: 'translateX(-50%)', background: color, color: '#fff', borderRadius: 6, padding: '2px 7px', fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                      {item.v.toFixed(0)}
-                    </div>
-                  )}
-                  <div style={{
-                    width: '100%',
-                    height: `${h}%`,
-                    borderRadius: '6px 6px 3px 3px',
-                    background: isNow ? color : '#f1f5f9',
-                    border: `1px solid ${isNow ? color : '#e4e9f0'}`,
-                    transition: 'height 0.8s cubic-bezier(0.4,0,0.2,1)',
-                  }} />
-                </div>
-                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: isNow ? color : '#8a96a8', fontWeight: isNow ? 700 : 400 }}>{item.d}</span>
-              </div>
-            )
-          })}
+        <SevenDayLineChart history={history} lineColor={color} />
+
+        {/* Min / Max */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16, marginBottom: 10 }}>
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>
+            Min: <strong style={{ color: '#1a2332' }}>{Math.round(Math.min(...history.map(d => d.v)))}</strong>
+          </span>
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>
+            Max: <strong style={{ color: '#1a2332' }}>{Math.round(maxV)}</strong>
+          </span>
+        </div>
+
+        {/* AQI colour scale */}
+        <div>
+          <div style={{ height: 8, borderRadius: 4, background: 'linear-gradient(90deg, #059669 0%, #eab308 20%, #ea580c 40%, #dc2626 60%, #7f1d1d 100%)' }} aria-hidden />
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+            {['0', '50', '100', '150', '200', '250', '300+'].map(v => (
+              <span key={v} style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.65rem', color: '#8a96a8', fontWeight: 500 }}>{v}</span>
+            ))}
+          </div>
         </div>
       </div>
 

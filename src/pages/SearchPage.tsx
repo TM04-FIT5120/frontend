@@ -1,12 +1,15 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, MapPin, X, ChevronRight } from 'lucide-react'
+import { Search, MapPin, X, ChevronRight, Loader2 } from 'lucide-react'
 import { getAQIMeta, aqiPercent } from '@/utils/aqiHelpers'
 import { useLocations } from '@/hooks/useLocations'
+import { fetchAirQualityByCity } from '@/api/api'
 
 export function SearchPage() {
   const [query,   setQuery]   = useState('')
   const [focused, setFocused] = useState(false)
+  const [apiSearching, setApiSearching] = useState(false)
+  const [apiError, setApiError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
   const { locations } = useLocations()
@@ -14,6 +17,21 @@ export function SearchPage() {
   const filtered = query.trim()
     ? locations.filter(l => l.name.toLowerCase().includes(query.toLowerCase()))
     : locations
+
+  const handleSearchByApi = async () => {
+    const q = query.trim()
+    if (!q) return
+    setApiError(null)
+    setApiSearching(true)
+    try {
+      const data = await fetchAirQualityByCity(q)
+      navigate(`/location/${encodeURIComponent(data.cityName)}`)
+    } catch {
+      setApiError('No air quality data found for this location. Try a city or station name (e.g. Kuala Lumpur, Penang).')
+    } finally {
+      setApiSearching(false)
+    }
+  }
 
   return (
     <div className="mx-auto animate-fade-in" style={{ maxWidth: 700 }}>
@@ -25,7 +43,7 @@ export function SearchPage() {
           Find Your Safe Spot
         </h1>
         <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '1rem', color: '#4a5568', margin: 0, lineHeight: 1.65 }}>
-          Check real-time air quality for any monitored station across Malaysia.
+          Check real-time air quality for any location. Search by city, district, or area name to get live API data.
         </p>
       </div>
 
@@ -45,22 +63,39 @@ export function SearchPage() {
             ref={inputRef}
             type="text"
             value={query}
-            onChange={e => setQuery(e.target.value)}
+            onChange={e => { setQuery(e.target.value); setApiError(null) }}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
-            placeholder="Search city or district…"
+            onKeyDown={e => { if (e.key === 'Enter') handleSearchByApi() }}
+            placeholder="Search city, park, street or area…"
             style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontFamily: 'Inter, sans-serif', fontSize: '1.05rem', color: '#1a2332' }}
           />
           {query && (
-            <button onClick={() => { setQuery(''); inputRef.current?.focus() }} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '0.25rem', cursor: 'pointer', display: 'flex', color: '#8a96a8' }}>
+            <button onClick={() => { setQuery(''); setApiError(null); inputRef.current?.focus() }} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '0.25rem', cursor: 'pointer', display: 'flex', color: '#8a96a8' }}>
               <X size={15} />
             </button>
           )}
         </div>
-        {query && (
-          <p style={{ position: 'absolute', right: 0, bottom: -20, fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: '#8a96a8' }}>
-            {filtered.length} result{filtered.length !== 1 ? 's' : ''} for &ldquo;{query}&rdquo;
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+          {query && (
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: '#8a96a8', margin: 0 }}>
+              {filtered.length} station{filtered.length !== 1 ? 's' : ''} match &ldquo;{query}&rdquo; in list. Or get real-time data for any location:
+            </p>
+          )}
+          {query.trim() && (
+            <button
+              type="button"
+              onClick={handleSearchByApi}
+              disabled={apiSearching}
+              className="btn btn-primary"
+              style={{ fontSize: '0.85rem', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: 6 }}
+            >
+              {apiSearching ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Searching…</> : <><Search size={14} /> Get real-time air quality for &ldquo;{query.trim()}&rdquo;</>}
+            </button>
+          )}
+        </div>
+        {apiError && (
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: '#dc2626', marginTop: 8 }}>{apiError}</p>
         )}
       </div>
 
@@ -113,10 +148,23 @@ export function SearchPage() {
               <Search size={24} color="#8a96a8" />
             </div>
             <div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '1.1rem', color: '#1a2332', margin: '0 0 4px' }}>No results found</p>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', color: '#8a96a8', margin: 0 }}>Try a different city name or clear your search.</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '1.1rem', color: '#1a2332', margin: '0 0 4px' }}>No stations match in list</p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', color: '#8a96a8', margin: 0 }}>
+                {query.trim() ? 'Use the "Get real-time air quality" button above to fetch data for this location, or try a different name.' : 'Enter a city or area name to search, or browse the full list above.'}
+              </p>
             </div>
-            <button onClick={() => setQuery('')} className="btn btn-secondary">Clear search</button>
+            {query.trim() && (
+              <button
+                type="button"
+                onClick={handleSearchByApi}
+                disabled={apiSearching}
+                className="btn btn-primary"
+                style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+              >
+                {apiSearching ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Searching…</> : <><Search size={14} /> Get real-time air quality for &ldquo;{query.trim()}&rdquo;</>}
+              </button>
+            )}
+            <button onClick={() => { setQuery(''); setApiError(null) }} className="btn btn-secondary">Clear search</button>
           </div>
         )}
       </div>
