@@ -183,7 +183,6 @@ export function SearchPage() {
             }}
             onBlur={() => setFocused(false)}
             onKeyDown={e => {
-              if (e.key === 'Enter') handleSearchByApi()
               if (e.key === 'Escape') setShowDropdown(false)
             }}
             placeholder="City, suburb, university, neighbourhood…"
@@ -265,28 +264,12 @@ export function SearchPage() {
           </div>
         )}
 
-        {/* Below-bar actions */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
-          {query && (
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: '#8a96a8', margin: 0 }}>
-              {filtered.length} station{filtered.length !== 1 ? 's' : ''} match &ldquo;{query}&rdquo; · or select a suggestion above
-            </p>
-          )}
-          {query.trim() && (
-            <button
-              type="button"
-              onClick={handleSearchByApi}
-              disabled={apiSearching}
-              className="btn btn-primary"
-              style={{ fontSize: '0.85rem', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: 6 }}
-            >
-              {apiSearching
-                ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Searching…</>
-                : <><Search size={14} /> Get air quality for &ldquo;{query.trim()}&rdquo;</>
-              }
-            </button>
-          )}
-        </div>
+        {/* Below-bar hint */}
+        {query && (
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: '#8a96a8', margin: '10px 0 0' }}>
+            {filtered.length} station{filtered.length !== 1 ? 's' : ''} match &ldquo;{query}&rdquo; · select a suggestion above
+          </p>
+        )}
 
         {apiError && (
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: '#dc2626', marginTop: 8 }}>{apiError}</p>
@@ -340,24 +323,10 @@ export function SearchPage() {
               <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '1.1rem', color: '#1a2332', margin: '0 0 4px' }}>No matching stations in list</p>
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', color: '#8a96a8', margin: 0 }}>
                 {query.trim()
-                  ? 'Pick a suggestion from the dropdown, or press Enter / use the button to search any location.'
+                  ? 'Pick a suggestion from the dropdown to search any location.'
                   : 'Enter a city, suburb, university, or area name to search.'}
               </p>
             </div>
-            {query.trim() && (
-              <button
-                type="button"
-                onClick={handleSearchByApi}
-                disabled={apiSearching}
-                className="btn btn-primary"
-                style={{ display: 'flex', alignItems: 'center', gap: 6 }}
-              >
-                {apiSearching
-                  ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Searching…</>
-                  : <><Search size={14} /> Get air quality for &ldquo;{query.trim()}&rdquo;</>
-                }
-              </button>
-            )}
             <button onClick={clearSearch} className="btn btn-secondary">Clear search</button>
           </div>
         )}

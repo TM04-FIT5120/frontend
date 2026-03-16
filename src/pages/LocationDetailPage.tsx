@@ -1,8 +1,8 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft, Heart, MapPin, Wind, Droplets, Eye,
-  TrendingUp, TrendingDown, Clock, Shield, AlertTriangle,
-  CheckCircle2, Calendar,
+  TrendingUp, TrendingDown, Shield, AlertTriangle,
+  CheckCircle2, Calendar, Loader2,
 } from 'lucide-react'
 import { getAQIMeta, aqiPercent } from '@/utils/aqiHelpers'
 import { useLocationDetail } from '@/hooks/useLocationDetail'
@@ -142,7 +142,40 @@ export function LocationDetailPage() {
   const navigate     = useNavigate()
   const { toggleFavorite, isFavorite } = useAppContext()
 
-  const { location } = useLocationDetail(decodeURIComponent(cityName ?? ''))
+  const { location, isLoading } = useLocationDetail(decodeURIComponent(cityName ?? ''))
+
+  if (isLoading && !location) {
+    return (
+      <div className="mx-auto" style={{ maxWidth: 860 }}>
+        {/* Skeleton nav */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <button onClick={() => navigate(-1)} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.88rem' }}>
+            <ArrowLeft size={15} />Back
+          </button>
+        </div>
+        {/* Loading card */}
+        <div className="card" style={{ padding: '4rem 2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, textAlign: 'center' }}>
+          <Loader2 size={40} color="#1d4ed8" style={{ animation: 'spin 1s linear infinite' }} />
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '1rem', fontWeight: 600, color: '#4a5568', margin: 0 }}>
+            Fetching air quality data…
+          </p>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: '#8a96a8', margin: 0 }}>
+            {decodeURIComponent(cityName ?? '')}
+          </p>
+        </div>
+        {/* Skeleton cards */}
+        {[1, 2].map(i => (
+          <div key={i} className="card" style={{ padding: '1.5rem', marginTop: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ height: 16, borderRadius: 8, background: '#f1f5f9', width: '40%', animation: 'pulse 1.5s ease-in-out infinite' }} />
+              <div style={{ height: 12, borderRadius: 8, background: '#f1f5f9', width: '70%', animation: 'pulse 1.5s ease-in-out infinite' }} />
+              <div style={{ height: 12, borderRadius: 8, background: '#f1f5f9', width: '55%', animation: 'pulse 1.5s ease-in-out infinite' }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
 
   if (!location) {
     return (
@@ -186,8 +219,30 @@ export function LocationDetailPage() {
           <ArrowLeft size={15} />Back
         </button>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f1f5f9', borderRadius: 10, padding: '0.4rem 0.85rem', fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: '#8a96a8', fontWeight: 500 }}>
-            <Clock size={13} />{location.updateTime ?? 'Updated now'}
+          <div className="flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
+            <span className="text-xs font-bold uppercase tracking-wide text-emerald-700">Updated at&nbsp;
+              {location.updateTime
+                ? new Date(location.updateTime).toLocaleString('en-MY', {
+                    timeZone: 'Asia/Kuala_Lumpur',
+                    day:      '2-digit',
+                    month:    'short',
+                    year:     'numeric',
+                    hour:     '2-digit',
+                    minute:   '2-digit',
+                    hour12:   true,
+                  })
+                : new Date().toLocaleString('en-MY', {
+                    timeZone: 'Asia/Kuala_Lumpur',
+                    day:      '2-digit',
+                    month:    'short',
+                    year:     'numeric',
+                    hour:     '2-digit',
+                    minute:   '2-digit',
+                    hour12:   true,
+                  })
+              }
+            </span>
           </div>
           <button
             onClick={() => location && toggleFavorite(location)}
