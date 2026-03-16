@@ -1,13 +1,13 @@
 import { useQueries } from '@tanstack/react-query'
 import { locations as staticLocations } from '@/data/locations'
-import { fetchAirQualityByCity, apiDataToLocation } from '@/api/api'
+import { fetchAirQualityByCoords, apiDataToLocation } from '@/api/api'
 import type { Location } from '@/data/locations'
 
 export function useLocations() {
   const results = useQueries({
     queries: staticLocations.map(loc => ({
-      queryKey: ['location', loc.name],
-      queryFn: () => fetchAirQualityByCity(loc.name).then(data => apiDataToLocation(loc, data)),
+      queryKey: ['location', loc.lat, loc.lng],
+      queryFn: () => fetchAirQualityByCoords(loc.lat, loc.lng).then(data => apiDataToLocation(loc, data)),
       retry: 1,
       staleTime: 5 * 60 * 1000,
     })),

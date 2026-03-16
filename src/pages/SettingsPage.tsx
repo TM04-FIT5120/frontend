@@ -54,7 +54,7 @@ export function SettingsPage() {
   }
 
   const handleReset = () => {
-    updateSettings({ notifications: true, units: 'metric' })
+    updateSettings({ notifications: true })
     setNotifMsg(null)
   }
 
