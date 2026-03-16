@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Search, MapPin, X, ChevronRight, Loader2, Building2, GraduationCap, Home, Map } from 'lucide-react'
 import { getAQIMeta, aqiPercent } from '@/utils/aqiHelpers'
 import { useLocations } from '@/hooks/useLocations'
-import { fetchAirQualityByCity, fetchAirQualityByCoords, fetchGeocodingSuggestions } from '@/api/api'
+import { fetchAirQualityByCoords, fetchGeocodingSuggestions } from '@/api/api'
 import type { GeocodingSuggestion } from '@/api/api'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -115,21 +115,21 @@ export function SearchPage() {
     }
   }
 
-  const handleSearchByApi = async () => {
-    const q = query.trim()
-    if (!q) return
-    setShowDropdown(false)
-    setApiError(null)
-    setApiSearching(true)
-    try {
-      const data = await fetchAirQualityByCity(q)
-      navigate(`/location/${encodeURIComponent(data.cityName)}`)
-    } catch {
-      setApiError('No air quality data found for this location. Try a city or station name (e.g. Kuala Lumpur, Penang).')
-    } finally {
-      setApiSearching(false)
-    }
-  }
+  // const handleSearchByApi = async () => {
+  //   const q = query.trim()
+  //   if (!q) return
+  //   setShowDropdown(false)
+  //   setApiError(null)
+  //   setApiSearching(true)
+  //   try {
+  //     const data = await fetchAirQualityByCity(q)
+  //     navigate(`/location/${encodeURIComponent(data.cityName)}`)
+  //   } catch {
+  //     setApiError('No air quality data found for this location. Try a city or station name (e.g. Kuala Lumpur, Penang).')
+  //   } finally {
+  //     setApiSearching(false)
+  //   }
+  // }
 
   const clearSearch = () => {
     setQuery('')
