@@ -1,7 +1,8 @@
 import { getStatusDescription } from '@/data/locations'
 import type { Location } from '@/data/locations'
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://futurestack.webhop.me'
+// const BASE_URL = 'http://localhost:8080'
+const BASE_URL = 'https://futurestack.webhop.me'
 
 // ── Response shapes ───────────────────────────────────────────────────────────
 export interface AirQualityResponse {
@@ -89,6 +90,38 @@ export async function addFavorite(cityName: string, latitude: number, longitude:
 export async function deleteFavorite(id: number): Promise<void> {
   const res = await fetch(`${BASE_URL}/api/favorites/delete/${id}`, { method: 'DELETE' })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
+}
+
+// ── Geocoding (Nominatim / OpenStreetMap) ─────────────────────────────────────
+
+export interface GeocodingSuggestion {
+  place_id:     number
+  display_name: string
+  lat:          string
+  lon:          string
+  type:         string
+  class:        string
+  address: {
+    city?:         string
+    town?:         string
+    village?:      string
+    suburb?:       string
+    neighbourhood?: string
+    county?:       string
+    state?:        string
+    amenity?:      string
+  }
+}
+
+// Nominatim free geocoder — Malaysia only, no API key required
+export async function fetchGeocodingSuggestions(query: string): Promise<GeocodingSuggestion[]> {
+  const url =
+    `https://nominatim.openstreetmap.org/search` +
+    `?q=${encodeURIComponent(query)}` +
+    `&format=json&limit=6&countrycodes=my&addressdetails=1`
+  const res = await fetch(url, { headers: { 'Accept-Language': 'en' } })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
 }
 
 // ── Data mapping helpers ──────────────────────────────────────────────────────

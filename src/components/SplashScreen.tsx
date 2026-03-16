@@ -128,7 +128,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
           className="text-xs text-gray-400"
           style={{ animation: 'fadeUp 0.7s ease-out 1.2s both' }}
         >
-          Powered by DOE Malaysia · FIT5120 Team TM04
+          FIT5120 Team TM04
         </p>
       </div>
     </div>

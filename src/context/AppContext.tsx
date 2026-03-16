@@ -6,12 +6,10 @@ import { fetchAllFavorites, addFavorite, deleteFavorite } from '@/api/api'
 
 export interface Settings {
   notifications: boolean
-  units:         'metric' | 'imperial'
 }
 
 const DEFAULT_SETTINGS: Settings = {
   notifications: true,
-  units:         'metric',
 }
 
 function readStorage<T>(key: string, fallback: T): T {
