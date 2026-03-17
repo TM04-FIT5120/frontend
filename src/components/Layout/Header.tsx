@@ -32,9 +32,9 @@ export function Header() {
           {[
             { to: '/',         end: true,  key: 'nav_home'      },
             { to: '/guide',    end: false, key: 'nav_guide'     },
-            { to: '/forecast', end: false, key: 'nav_forecast'  },
-            // { to: '/compare',  end: false, key: 'nav_compare'   },
             { to: '/search',   end: false, key: 'nav_search'    },
+            { to: '/forecast', end: false, key: 'nav_forecast'  },
+            { to: '/compare',  end: false, key: 'nav_compare'   },
             { to: '/favorites',end: false, key: 'nav_favorites' },
             { to: '/settings', end: false, key: 'nav_settings'  },
           ].map(({ to, end, key }) => (

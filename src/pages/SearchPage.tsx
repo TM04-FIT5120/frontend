@@ -115,22 +115,6 @@ export function SearchPage() {
     }
   }
 
-  // const handleSearchByApi = async () => {
-  //   const q = query.trim()
-  //   if (!q) return
-  //   setShowDropdown(false)
-  //   setApiError(null)
-  //   setApiSearching(true)
-  //   try {
-  //     const data = await fetchAirQualityByCity(q)
-  //     navigate(`/location/${encodeURIComponent(data.cityName)}`)
-  //   } catch {
-  //     setApiError('No air quality data found for this location. Try a city or station name (e.g. Kuala Lumpur, Penang).')
-  //   } finally {
-  //     setApiSearching(false)
-  //   }
-  // }
-
   const clearSearch = () => {
     setQuery('')
     setApiError(null)

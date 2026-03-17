@@ -1,16 +1,17 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { fetchAirQualityByCoords, airQualityToLocation } from '@/api/api'
 import { useNavigate } from 'react-router-dom'
 import {
   Navigation, Loader2, MapPin,
   AlertTriangle, ArrowRight, ChevronRight,
   X, ShieldCheck, Wind, Thermometer,
-  LocateFixed, Info,
+  LocateFixed, Info, Heart,
 } from 'lucide-react'
 import { isApproachingHighRiskPeriod } from '@/pages/ForecastPage'
 import type { Location } from '@/data/locations'
 import { getAQIMeta, aqiPercent } from '@/utils/aqiHelpers'
 import { useLocations } from '@/hooks/useLocations'
+import { useAppContext } from '@/context/AppContext'
 import { AirQualityMap } from '@/components/AirQualityMap'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -131,7 +132,9 @@ function LocationDetailPanel({
   onClose: () => void
 }) {
   const navigate = useNavigate()
+  const { toggleFavorite, isFavorite } = useAppContext()
   const meta = getAQIMeta(loc.status)
+  const fav = isFavorite(loc.name)
 
   return (
     <div style={{ background: meta.bgColor, border: `1.5px solid ${meta.borderColor}`, borderRadius: 16, padding: '1.25rem', position: 'relative' }}>
@@ -141,12 +144,20 @@ function LocationDetailPanel({
           <h3 style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.2rem', fontWeight: 700, color: '#1a2332', margin: 0 }}>{loc.name}</h3>
           <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', color: meta.color, fontWeight: 600, margin: '2px 0 0' }}>{meta.label}</p>
         </div>
-        <button
-          onClick={onClose}
-          style={{ background: 'rgba(0,0,0,0.06)', border: 'none', borderRadius: '50%', width: 28, height: 28, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-        >
-          <X size={14} color="#64748b" />
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          <button
+            onClick={onClose}
+            style={{ background: 'rgba(0,0,0,0.06)', border: 'none', borderRadius: '50%', width: 28, height: 28, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <X size={14} color="#64748b" />
+          </button>
+          <button
+            onClick={() => toggleFavorite(loc)}
+            style={{ padding: '0.35rem', borderRadius: 8, background: fav ? '#fef2f2' : '#f1f5f9', border: `1.5px solid ${fav ? '#fecaca' : '#e4e9f0'}`, cursor: 'pointer', display: 'flex', color: fav ? '#dc2626' : '#8a96a8', transition: 'all 0.2s' }}
+          >
+            <Heart size={16} fill={fav ? '#dc2626' : 'none'} />
+          </button>
+        </div>
       </div>
 
       {/* Big AQI number */}
@@ -396,11 +407,30 @@ export function HomePage() {
   const [locError, setLocError]                 = useState<string | null>(null)
   const [showConfirm, setShowConfirm]           = useState(false)
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null)
+  const [showHighRiskPopup, setShowHighRiskPopup] = useState(false)
+  const [showHighRiskTestModal, setShowHighRiskTestModal] = useState(false)
+  const [highRiskTestActive, setHighRiskTestActive] = useState(false)
+  // Dev test: dummy upcoming predictions (Alor Setar Apr/May). When set, we evaluate them and high AQI triggers the alert.
+  const [devTestUpcomingPredictions, setDevTestUpcomingPredictions] = useState<{ month: string; predictedAqi: number }[] | null>(null)
 
   const { locations } = useLocations()
 
   const goodCount = locations.filter(l => l.status === 'good').length
   const warnCount = locations.filter(l => ['hazardous', 'very-unhealthy', 'unhealthy'].includes(l.status)).length
+
+  const hasElevatedAqi = warnCount > 0
+  const hasUpcomingUnhealthyFromTest =
+    import.meta.env.DEV && (devTestUpcomingPredictions?.some(p => p.predictedAqi > 100) ?? false)
+  const shouldShowHighRiskNotice =
+    isApproachingHighRiskPeriod() || hasElevatedAqi || hasUpcomingUnhealthyFromTest
+
+  // When dummy data has high AQI, that is the reason the alert should show — open the popup automatically.
+  useEffect(() => {
+    if (hasUpcomingUnhealthyFromTest) {
+      setHighRiskTestActive(true)
+      setShowHighRiskPopup(true)
+    }
+  }, [hasUpcomingUnhealthyFromTest])
 
   const doGetLocation = useCallback(() => {
     setShowConfirm(false)
@@ -486,6 +516,14 @@ export function HomePage() {
             >
               <MapPin size={16} /> Search Area
             </button>
+            {import.meta.env.DEV && (
+              <button
+                onClick={() => setShowHighRiskTestModal(true)}
+                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '0.75rem 1.5rem', borderRadius: 12, border: '1.5px solid rgba(255,255,255,0.5)', background: 'rgba(239,68,68,0.18)', color: '#fee2e2', fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer' }}
+              >
+                <AlertTriangle size={16} /> Test High-Risk Alert
+              </button>
+            )}
           </div>
 
           {locError && (
@@ -498,7 +536,7 @@ export function HomePage() {
       </div>
 
       {/* AC 2.2.2: Proactive high-risk season notice — links to Forecast / activity planning */}
-      {isApproachingHighRiskPeriod() && (
+      {shouldShowHighRiskNotice && (
         <div
           role="alert"
           className="card"
@@ -516,17 +554,264 @@ export function HomePage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <AlertTriangle size={22} color="#ca8a04" style={{ flexShrink: 0 }} />
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.95rem', color: '#1a2332', margin: 0, fontWeight: 500 }}>
-              Haze season is approaching. Consider planning indoor alternatives during this period.
+              Haze season or elevated pollution is approaching within the next month. Consider planning indoor alternatives during this period.
             </p>
           </div>
           <button
             type="button"
-            onClick={() => navigate('/forecast')}
+            onClick={() => {
+              setHighRiskTestActive(false)
+              setShowHighRiskPopup(true)
+            }}
             className="btn btn-primary"
             style={{ fontSize: '0.85rem', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: 6 }}
           >
             View Forecast <ArrowRight size={14} />
           </button>
+        </div>
+      )}
+
+      {/* High-risk alert popup (also used by dev test) */}
+      {showHighRiskPopup && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15,23,42,0.55)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+          }}
+          onClick={() => {
+            setShowHighRiskPopup(false)
+            setHighRiskTestActive(false)
+            if (import.meta.env.DEV) setDevTestUpcomingPredictions(null)
+          }}
+        >
+          <div
+            style={{
+              background: '#ffffff',
+              borderRadius: 20,
+              maxWidth: 420,
+              width: '100%',
+              overflow: 'hidden',
+              boxShadow: '0 24px 80px rgba(0,0,0,0.4)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div
+              style={{
+                background: '#dc2626',
+                color: '#fff',
+                padding: '0.9rem 1.25rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <AlertTriangle size={20} color="#fee2e2" />
+                <div>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', fontWeight: 700, margin: 0, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                    Air Quality Alert
+                  </p>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>
+                    High-Risk Period Approaching
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowHighRiskPopup(false)
+                  setHighRiskTestActive(false)
+                  if (import.meta.env.DEV) setDevTestUpcomingPredictions(null)
+                }}
+                style={{ background: 'transparent', border: 'none', color: '#fee2e2', cursor: 'pointer' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: '1.5rem 1.75rem 1.25rem' }}>
+              <div
+                style={{
+                  borderRadius: 14,
+                  border: '1px solid #fecaca',
+                  background: '#fef2f2',
+                  padding: '0.9rem 1rem',
+                  marginBottom: 14,
+                }}
+              >
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', fontWeight: 600, color: '#7f1d1d', margin: 0, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Next 1–2 months
+                </p>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', color: '#7f1d1d', margin: '4px 0 0', fontWeight: 600 }}>
+                  Forecasted AQI levels may reach Unhealthy or higher. Plan ahead for indoor alternatives.
+                </p>
+              </div>
+
+              <ul style={{ paddingLeft: '1.2rem', margin: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <li style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', color: '#374151' }}>
+                  Prepare indoor activities (walking routes, light exercise, hobbies) for days with poor air quality.
+                </li>
+                <li style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', color: '#374151' }}>
+                  Check masks and air purifier filters so they are ready before haze peaks.
+                </li>
+                <li style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', color: '#374151' }}>
+                  Share plans with family members, especially elderly or sensitive groups.
+                </li>
+              </ul>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowHighRiskPopup(false)
+                  if (highRiskTestActive && import.meta.env.DEV) {
+                    navigate(`/forecast?location=${encodeURIComponent('Alor Setar')}&tab=long&testHighAqi=1`)
+                  } else {
+                    navigate('/forecast?tab=long')
+                  }
+                  if (import.meta.env.DEV) setHighRiskTestActive(false)
+                }}
+                style={{
+                  marginTop: 18,
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  borderRadius: 999,
+                  border: 'none',
+                  background: '#1d4ed8',
+                  color: '#fff',
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 700,
+                  fontSize: '0.95rem',
+                  cursor: 'pointer',
+                  marginBottom: 8,
+                }}
+              >
+                See Prediction
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowHighRiskPopup(false)
+                  setHighRiskTestActive(false)
+                  if (import.meta.env.DEV) setDevTestUpcomingPredictions(null)
+                }}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  borderRadius: 999,
+                  border: 'none',
+                  background: '#dc2626',
+                  color: '#fff',
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 700,
+                  fontSize: '0.95rem',
+                  cursor: 'pointer',
+                }}
+              >
+                I Understand — Close Warning
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Development-only test modal to simulate upcoming high-risk months */}
+      {import.meta.env.DEV && showHighRiskTestModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15,23,42,0.55)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 9998,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+          }}
+          onClick={() => setShowHighRiskTestModal(false)}
+        >
+          <div
+            style={{
+              background: '#ffffff',
+              borderRadius: 20,
+              maxWidth: 420,
+              width: '100%',
+              padding: '1.75rem 1.75rem 1.5rem',
+              boxShadow: '0 24px 80px rgba(0,0,0,0.35)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <AlertTriangle size={20} color="#e11d48" />
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', fontWeight: 700, color: '#1f2937', margin: 0 }}>
+                  High-Risk Alert Test
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowHighRiskTestModal(false)}
+                style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', color: '#4b5563', margin: '6px 0 10px', lineHeight: 1.6 }}>
+              This development-only test simulates an upcoming 2-month period with elevated AQI (Unhealthy or above) so you can verify the high-risk alert popup behaviour.
+            </p>
+
+            <div
+              style={{
+                borderRadius: 12,
+                border: '1px dashed #fecaca',
+                background: '#fff7ed',
+                padding: '0.75rem 0.9rem',
+                marginBottom: 14,
+              }}
+            >
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: '#7c2d12', margin: 0 }}>
+                Dummy scenario: <strong>Next month</strong> and the month after are predicted to have AQI levels in the{' '}
+                <strong>Unhealthy</strong> range for multiple stations.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowHighRiskTestModal(false)
+                // Flow dummy data: next 2 months for Alor Setar with unhealthy AQI (145, 155). The app will evaluate this and trigger the alert.
+                setDevTestUpcomingPredictions([
+                  { month: '2026-04', predictedAqi: 145.0442856239046 },
+                  { month: '2026-05', predictedAqi: 155.3533942061333 },
+                ])
+              }}
+              style={{
+                width: '100%',
+                padding: '0.75rem 1rem',
+                borderRadius: 999,
+                border: 'none',
+                background: '#1d4ed8',
+                color: '#fff',
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 700,
+                fontSize: '0.95rem',
+                cursor: 'pointer',
+              }}
+            >
+              Start Test
+            </button>
+          </div>
         </div>
       )}
 
@@ -548,7 +833,7 @@ export function HomePage() {
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
 
         {/* Map card */}
-        <div className="card xl:col-span-2" style={{ overflow: 'hidden' }}>
+        <div className="card xl:col-span-2" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           {/* Card header */}
           <div style={{ padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
             <div>
@@ -570,8 +855,8 @@ export function HomePage() {
           </div>
 
           {/* Leaflet map */}
-          <div style={{ padding: '0 1.5rem' }}>
-            <div style={{ height: 570, borderRadius: 12, overflow: 'hidden', border: '1px solid #e4e9f0', position: 'relative' }}>
+          <div style={{ padding: '0 1.5rem', flex: 1, minHeight: 0 }}>
+            <div style={{ height: '100%', minHeight: 300, borderRadius: 12, overflow: 'hidden', border: '1px solid #e4e9f0', position: 'relative' }}>
               <AirQualityMap
                 locations={locations}
                 userLoc={userLoc}

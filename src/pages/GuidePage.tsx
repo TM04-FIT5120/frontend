@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { MapPin, Search, Heart, Settings, Image, ChevronRight, ZoomIn, ZoomOut, X, TrendingUp } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import { MapPin, Search, Heart, Settings, BarChart2, Image, ChevronRight, ZoomIn, ZoomOut, X, TrendingUp } from 'lucide-react'
 
 // ── Lightbox ────────────────────────────────────────────────────────────────────
 function Lightbox({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
@@ -86,9 +87,9 @@ const btnStyle: React.CSSProperties = {
 
 const TOC_ITEMS = [
   { id: 'location',   label: 'Using Your Location'          },
-  { id: 'forecast',   label: 'Short-term & Long-term Forecast' },
-  // { id: 'compare',    label: 'Comparing Cities'             },
   { id: 'search',     label: 'Search & City Details'        },
+  { id: 'forecast',   label: 'Short-term & Long-term Forecast' },
+  { id: 'compare',    label: 'Comparing Cities'             },
   { id: 'favourites', label: 'Adding & Viewing Favourites'  },
   { id: 'settings',   label: 'Settings & Preferences'       },
 ]
@@ -100,7 +101,7 @@ function ImgBox({ caption, src }: { caption: string; src?: string }) {
   if (src) {
     return (
       <>
-        {open && <Lightbox src={src} alt={caption} onClose={() => setOpen(false)} />}
+        {open && createPortal(<Lightbox src={src} alt={caption} onClose={() => setOpen(false)} />, document.body)}
         <div
           onClick={() => setOpen(true)}
           title="Click to zoom"
@@ -381,7 +382,7 @@ export function GuidePage() {
             lineHeight: 1.65,
           }}
         >
-          A step-by-step visual guide to all the features of MyAirSafe — designed to be easy to follow.
+          A step-by-step visual guide to all the features of MyAirSafe.
         </p>
       </div>
 
@@ -496,100 +497,13 @@ export function GuidePage() {
         <Tip text="If the app cannot detect your location, make sure Location Services are turned on in your device's settings." />
       </Section>
 
-      {/* ── Forecast (Short-term & Long-term) ─────────────────────────────────── */}
-      <Section
-        id="forecast"
-        icon={TrendingUp}
-        iconColor="#059669"
-        iconBg="#ecfdf5"
-        sectionLabel="Feature 2"
-        title="Short-term & Long-term Forecast"
-      >
-        <StepRow
-          number={1}
-          title="Open the Forecast page"
-          description='Click "Forecast" in the top navigation bar. You will see two tabs: "Short-Term Forecast" and "Long-Term Forecast".'
-          imageCaption="Forecast page with Short-term and Long-term tabs"
-          imageSrc={undefined}
-        />
-        <StepRow
-          number={2}
-          title="View Short-term Forecast"
-          description="The Short-term tab shows predicted air quality for the next 24 hours and coming days, using easy risk categories (Low, Moderate, High Risk) with green, yellow and red colours. When levels are unhealthy, you will see advice to adjust your routine or choose indoor activities."
-          imageCaption="Short-term forecast with risk categories"
-          imageSrc={undefined}
-        />
-        <StepRow
-          number={3}
-          title="View Long-term Forecast"
-          description="The Long-term tab shows recurring seasonal patterns (e.g. Haze Season) in a calendar-style view, so you can plan ahead for higher-risk periods."
-          imageCaption="Long-term forecast with seasonal patterns"
-          imageSrc={undefined}
-        />
-        <StepRow
-          number={4}
-          title="Open Forecast from your location"
-          description="From the Home page, after using Get My Location, use the Short-term or Long-term Forecast buttons on the right panel. From any city detail page, use the Forecast buttons below the AQI to see that location's forecast."
-          imageCaption="Forecast buttons on the location panel and detail page"
-          imageSrc={undefined}
-        />
-        <Tip text="Check the Forecast before planning a morning walk to see if the next day is predicted to be safe." />
-      </Section>
-
-      {/* ── 2. Compare Cities (commented out — no longer in nav) ───────────────── */}
-      {/* <Section
-        id="compare"
-        icon={BarChart2}
-        iconColor="#059669"
-        iconBg="#ecfdf5"
-        sectionLabel="Feature 2"
-        title="Comparing Cities"
-      >
-        <StepRow
-          number={1}
-          title="Open the Compare page"
-          description='Click "Compare" in the navigation bar at the top. You will see two panels — one for each city you want to compare.'
-          imageCaption="Compare page — two empty city panels side by side"
-          imageSrc="/2.1.png"
-        />
-        <StepRow
-          number={2}
-          title="Choose the first city"
-          description='Click inside the left dropdown and type a few letters — for example "Kuala" — then select a city from the filtered list.'
-          imageCaption="Left dropdown open with city options filtered"
-          imageSrc="/2.2.png"
-        />
-        <StepRow
-          number={3}
-          title="Choose the second city"
-          description="Do the same for the right panel. Pick a different city you want to compare against the first one."
-          imageCaption="Both dropdowns filled with two different cities selected"
-          imageSrc="/2.3.png"
-        />
-        <StepRow
-          number={4}
-          title="Read the results"
-          description="Each panel shows the AQI number, colour-coded status badge, PM2.5 and PM10 levels, and a health summary. The cleaner city is labelled at the top."
-          imageCaption="Comparison results showing AQI rings, pollutant readings, and the Cleaner Air badge"
-          imageSrc="/2.4.png"
-        />
-        <StepRow
-          number={5}
-          title="Check the comparison summary"
-          description="Scroll down to see the Summary card which shows the AQI difference, which city has cleaner air, and a Senior Recommendation tailored for elderly users."
-          imageCaption="Comparison Summary card with AQI difference and senior recommendation"
-          imageSrc="/2.5.png"
-        />
-        <Tip text="Use Compare before planning a morning walk — pick your city and a nearby town to see where the air is cleaner that day." />
-      </Section> */}
-
-      {/* ── 3. Search & City Details ─────────────────────────────────────────── */}
+      {/* ── 2. Search & City Details ─────────────────────────────────────────── */}
       <Section
         id="search"
         icon={Search}
         iconColor="#ca8a04"
         iconBg="#fefce8"
-        sectionLabel="Feature 3"
+        sectionLabel="Feature 2"
         title="Search &amp; City Details"
       >
         <StepRow
@@ -597,39 +511,140 @@ export function GuidePage() {
           title="Open the Search page"
           description='Click "Search" in the top navigation bar. You will see a large search bar and a full list of monitoring stations below it. Scroll down to see more stations.'
           imageCaption="Search page showing the search bar and full station list"
-          imageSrc="/3.1.png"
+          imageSrc="/2.1.png"
         />
         <StepRow
           number={2}
-          title="Type a city or station name"
-          description='Click the search bar and type a few letters — for example "Penang". The list below filters in real time. You do not need to press Enter.'
+          title="Type a city, place, location or building name"
+          description='Click the search bar and type a few letters, for example "Penang", "Sunway Pyramid". You will see a list of matching results auto suggested below. Choose one from the auto suggested list or from the filtered station list.'
           imageCaption="Search bar with typed text and filtered results shown below"
-          imageSrc="/3.2.png"
+          imageSrc="/2.2.png"
         />
         <StepRow
           number={3}
           title="Tap a city to see full details"
-          description="Click any city card to open its detailed report page which includes individual pollutant levels, a trend chart, and full health advice. From there you can use the Short-term Forecast and Long-term Forecast buttons to see the forecast for that location."
+          description="Click any suggested place to open its AQI monitoring station's detailed report page which includes individual pollutant levels, a trend chart, and full health advice. From there you can use the Short-term Forecast and Long-term Forecast buttons to see the forecast for that location."
           imageCaption="City detail page with Forecast buttons"
-          imageSrc="/3.3.png"
+          imageSrc="/2.3.png"
         />
         <StepRow
           number={4}
           title="Go back to search results"
           description="Press the back arrow (←) at the top left of the detail page, or use your browser's Back button, to return to the search list."
           imageCaption="Back arrow button highlighted at the top of the detail page"
-          imageSrc="/3.4.png"
+          imageSrc="/2.4.png"
         />
         <Tip text="You can also reach any city's detail page by tapping its card on the Home page or the Favourites page." />
       </Section>
 
-      {/* ── 4. Favourites ────────────────────────────────────────────────────── */}
+      {/* ── 3. Forecast (Short-term & Long-term) ─────────────────────────────────── */}
+      <Section
+        id="forecast"
+        icon={TrendingUp}
+        iconColor="#059669"
+        iconBg="#ecfdf5"
+        sectionLabel="Feature 3"
+        title="Short-term & Long-term Forecast"
+      >
+        <StepRow
+          number={1}
+          title="Open the Forecast page"
+          description='Click "Forecast" in the top navigation bar. The page opens with a blue info banner at the top reminding you to pick a location first, and two tabs below it: "Short-Term Forecast" and "Long-Term Forecast".'
+          imageCaption="Forecast page header with the two tabs and location info banner"
+          imageSrc="/3.1.png"
+        />
+        <StepRow
+          number={2}
+          title="Select a location to forecast"
+          description='The forecast is always tied to a specific station. The quickest way is to go to the Search page, find your city, open its detail page, and tap either the "Short-term Forecast" or "Long-term Forecast" button. This brings you straight to the Forecast page with that city pre-selected. You can also reach it from the Home page panel after using "Get My Location".'
+          imageCaption="Short-term / Long-term Forecast buttons on the city detail page"
+          imageSrc="/3.2.png"
+        />
+        <StepRow
+          number={3}
+          title="Read the Next 24 Hours card (Short-Term tab)"
+          description='On the Short-Term tab, the first card shows the predicted AQI for the next 24 hours. You will see a large colour-coded AQI number with a status badge (e.g. Good, Moderate, Unhealthy), a short health advice message, and a blue Shield note with specific guidance for seniors and sensitive groups.'
+          imageCaption="Next 24 Hours card showing AQI, status badge, advice, and senior shield note"
+          imageSrc="/3.3.png"
+        />
+        <StepRow
+          number={4}
+          title="Check the Upcoming Days (Short-Term tab)"
+          description="Below the 24-hour card, the Upcoming Days section lists each day from the day after tomorrow onwards. Each row shows the day name and date, the predicted AQI number with its status label, the health advice for that day, and the senior-focused shield note. Days with higher AQI are highlighted in red or orange tones — these are the days to consider staying indoors."
+          imageCaption="Upcoming days list with day, AQI, status badge, and health advice per row"
+          imageSrc="/3.4.png"
+        />
+        <StepRow
+          number={5}
+          title="View the 12-Month Prediction (Long-Term tab)"
+          description='Switch to the "Long-Term Forecast" tab. If prediction data is available for your city (based on 2 years of historical AQI data), you will see a grid of the next 12 months — each tile shows the month name, the predicted average AQI, a colour-coded status badge, and health advice. Months falling in the Haze Season (June–October) are flagged in red with an extra warning.'
+          imageCaption="12-month prediction grid with colour-coded monthly AQI tiles"
+          imageSrc="/3.5.png"
+        />
+        <StepRow
+          number={6}
+          title="Use the High-Risk Period calendar (Long-Term tab)"
+          description="If no prediction data is available for your selected city, the Long-Term tab still shows a 12-month calendar grid highlighting the known high-risk haze season months (June–October) in red. Use this to plan indoor alternatives ahead of time, such as indoor walks, exercise at home, or visiting air-conditioned venues during those months."
+          imageCaption="High-risk period calendar showing haze season months highlighted in red"
+          imageSrc="/3.6.png"
+        />
+        <Tip text="Check the Short-Term Forecast the night before any outdoor activity — if the next 24 hours show Unhealthy or worse, plan an indoor alternative. Use the Long-Term tab at the start of each month to prepare for the months ahead." />
+      </Section>
+
+      {/* ── 4. Compare Cities ────────────────────────────────────────────────────── */}
+      <Section
+        id="compare"
+        icon={BarChart2}
+        iconColor="#059669"
+        iconBg="#ecfdf5"
+        sectionLabel="Feature 4"
+        title="Comparing Cities"
+      >
+        <StepRow
+          number={1}
+          title="Open the Compare page"
+          description='Click "Compare" in the navigation bar at the top. You will see two panels, one for each city you want to compare.'
+          imageCaption="Compare page with two empty city panels side by side"
+          imageSrc="/4.1.png"
+        />
+        <StepRow
+          number={2}
+          title="Choose the first city"
+          description='Click inside the left dropdown and choose a city from the list.'
+          imageCaption="Left dropdown open with city options filtered"
+          imageSrc="/4.2.png"
+        />
+        <StepRow
+          number={3}
+          title="Choose the second city"
+          description="Do the same for the right panel. Pick a different city you want to compare against the first one."
+          imageCaption="Both dropdowns filled with two different cities selected"
+          imageSrc="/4.3.png"
+        />
+        <StepRow
+          number={4}
+          title="Read the results"
+          description="Each panel shows the AQI number, colour-coded status badge, PM2.5 and PM10 levels, and a health summary. The cleaner city is labelled at the top."
+          imageCaption="Comparison results showing AQI rings, pollutant readings, and the Cleaner Air badge"
+          imageSrc="/4.4.png"
+        />
+        <StepRow
+          number={5}
+          title="Check the comparison summary"
+          description="Scroll down to see the Summary card which shows the AQI difference, which city has cleaner air, and a Senior Recommendation tailored for elderly users."
+          imageCaption="Comparison Summary card with AQI difference and senior recommendation"
+          imageSrc="/4.5.png"
+        />
+        <Tip text="Use Compare before planning a morning walk — pick your city and a nearby town to see where the air is cleaner that day." />
+      </Section>
+
+      {/* ── 5. Favourites ────────────────────────────────────────────────────── */}
       <Section
         id="favourites"
         icon={Heart}
         iconColor="#dc2626"
         iconBg="#fef2f2"
-        sectionLabel="Feature 4"
+        sectionLabel="Feature 5"
         title="Adding &amp; Viewing Favourites"
       >
         <StepRow
@@ -637,46 +652,46 @@ export function GuidePage() {
           title="Find a city you want to save"
           description="Use Search or the Home page to find a city you check regularly. Click on the city card to open its detail page."
           imageCaption="City detail page ready to be saved as a favourite"
-          imageSrc="/4.1.png"
+          imageSrc="/5.1.png"
         />
         <StepRow
           number={2}
           title="Tap the heart icon"
           description="On the detail page click the heart icon (♥) near the city name. It turns red to confirm the city is saved to your Favourites."
           imageCaption="Heart icon highlighted — showing the red saved state"
-          imageSrc="/4.2.png"
+          imageSrc="/5.2.png"
         />
         <StepRow
           number={3}
           title="Open the Favourites page"
           description='Click "Favorites" in the top navigation bar. All your saved cities are listed here with their live AQI readings.'
           imageCaption="Favourites page showing a list of saved city cards"
-          imageSrc="/4.3.png"
+          imageSrc="/5.3.png"
         />
         <StepRow
           number={4}
           title="Tap a favourite to check details"
-          description="From the Favourites page, tap any city card to go directly to its full detail page — the quickest way to check places that matter to you."
+          description="From the Favourites page, tap any city card to go directly to its full detail page, the quickest way to check places that matter to you."
           imageCaption="Tapping a favourite card to navigate to the detail page"
-          imageSrc="/4.4.png"
+          imageSrc="/5.4.png"
         />
         <StepRow
           number={5}
           title="Remove a favourite"
           description="To remove a saved city, open the Favourites page and click the red bin icon on the right side of the city card. It is removed immediately."
           imageCaption="Red bin/trash icon highlighted on a favourite card"
-          imageSrc="/4.5.png"
+          imageSrc="/5.5.png"
         />
-        <Tip text="Your favourites are saved on your device and will still be there the next time you open MyAirSafe — even after closing the browser." />
+        <Tip text="Your favourites are saved so that you can easily access them next time you open MyAirSafe." />
       </Section>
 
-      {/* ── 5. Settings ──────────────────────────────────────────────────────── */}
+      {/* ── 6. Settings ──────────────────────────────────────────────────────── */}
       <Section
         id="settings"
         icon={Settings}
         iconColor="#7c3aed"
         iconBg="#f5f3ff"
-        sectionLabel="Feature 5"
+        sectionLabel="Feature 6"
         title="Settings &amp; Preferences"
       >
         <StepRow
@@ -684,23 +699,23 @@ export function GuidePage() {
           title="Open the Settings page"
           description='Click "Settings" in the top navigation bar. You will see all customisation options arranged in sections.'
           imageCaption="Settings page overview showing all available options"
-          imageSrc="/5.1.png"
+          imageSrc="/6.1.png"
         />
         <StepRow
           number={2}
           title="Turn on air quality alerts"
           description="Under General, toggle Air Quality Alerts to ON (blue). Your browser will ask permission — click Allow. You will be notified when air quality is poor."
           imageCaption="Notifications toggle in the ON (blue) position"
-          imageSrc="/5.3.png"
+          imageSrc="/6.2.png"
         />
         <StepRow
           number={3}
           title="Save or reset your settings"
           description='Click "Save Changes" (blue button at the bottom) to save your preferences. Click "Reset Defaults" to undo all changes and return to the original settings.'
           imageCaption="Save Changes and Reset Defaults buttons at the bottom of Settings"
-          imageSrc="/5.5.png"
+          imageSrc="/6.3.png"
         />
-        <Tip text="Settings are stored on your device only. If you use a different phone or computer you will need to set your preferences again on that device." />
+        <Tip text="Settings are stored on your device only. If you use a different device you will need to set your preferences again on that device." />
       </Section>
 
       {/* Footer note */}

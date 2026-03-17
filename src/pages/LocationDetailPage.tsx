@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import {
   ArrowLeft, Heart, MapPin, Wind, Droplets, Eye,
   TrendingUp, TrendingDown, Shield, AlertTriangle,
@@ -7,6 +8,7 @@ import {
 import { getAQIMeta, aqiPercent } from '@/utils/aqiHelpers'
 import { useLocationDetail } from '@/hooks/useLocationDetail'
 import { useAppContext } from '@/context/AppContext'
+import { reverseGeocodeCity } from '@/api/api'
 
 // ── Donut gauge ────────────────────────────────────────────────────────────────
 function AQIDonut({ aqi, color, size = 160 }: { aqi: number; color: string; size?: number }) {
@@ -144,6 +146,35 @@ export function LocationDetailPage() {
 
   const { location, isLoading } = useLocationDetail(decodeURIComponent(cityName ?? ''))
 
+  const [canonicalCityName, setCanonicalCityName] = useState<string | null>(null)
+
+  // Derive a canonical city name from the station's coordinates using reverse
+  // geocoding, so that downstream pages (like ForecastPage) can use a name
+  // that matches external / DB-backed datasets.
+  useEffect(() => {
+    let cancelled = false
+    async function resolveCanonical() {
+      if (!location) {
+        setCanonicalCityName(null)
+        return
+      }
+      try {
+        const name = await reverseGeocodeCity(location.lat, location.lng)
+        if (!cancelled) {
+          setCanonicalCityName(name || location.name)
+        }
+      } catch {
+        if (!cancelled) {
+          setCanonicalCityName(location.name)
+        }
+      }
+    }
+    resolveCanonical()
+    return () => {
+      cancelled = true
+    }
+  }, [location])
+
   if (isLoading && !location) {
     return (
       <div className="mx-auto" style={{ maxWidth: 860 }}>
@@ -246,9 +277,9 @@ export function LocationDetailPage() {
           </div>
           <button
             onClick={() => location && toggleFavorite(location)}
-            style={{ padding: '0.5rem', borderRadius: 12, background: location && isFavorite(location.id) ? '#fef2f2' : '#f1f5f9', border: `1.5px solid ${location && isFavorite(location.id) ? '#fecaca' : '#e4e9f0'}`, cursor: 'pointer', display: 'flex', color: location && isFavorite(location.id) ? '#dc2626' : '#8a96a8', transition: 'all 0.2s' }}
+            style={{ padding: '0.5rem', borderRadius: 12, background: location && isFavorite(location.name) ? '#fef2f2' : '#f1f5f9', border: `1.5px solid ${location && isFavorite(location.name) ? '#fecaca' : '#e4e9f0'}`, cursor: 'pointer', display: 'flex', color: location && isFavorite(location.name) ? '#dc2626' : '#8a96a8', transition: 'all 0.2s' }}
           >
-            <Heart size={20} fill={location && isFavorite(location.id) ? '#dc2626' : 'none'} />
+            <Heart size={20} fill={location && isFavorite(location.name) ? '#dc2626' : 'none'} />
           </button>
         </div>
       </div>
@@ -302,7 +333,7 @@ export function LocationDetailPage() {
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         <button
           type="button"
-          onClick={() => navigate(`/forecast?location=${encodeURIComponent(location.name)}`)}
+          onClick={() => navigate(`/forecast?location=${encodeURIComponent(canonicalCityName || location.name)}`)}
           className="btn btn-outline"
           style={{ flex: '1 1 180px', padding: '0.6rem 1rem', fontSize: '0.88rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
         >
@@ -310,7 +341,7 @@ export function LocationDetailPage() {
         </button>
         <button
           type="button"
-          onClick={() => navigate(`/forecast?location=${encodeURIComponent(location.name)}&tab=long`)}
+          onClick={() => navigate(`/forecast?location=${encodeURIComponent(canonicalCityName || location.name)}&tab=long`)}
           className="btn btn-outline"
           style={{ flex: '1 1 180px', padding: '0.6rem 1rem', fontSize: '0.88rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
         >
