@@ -3,6 +3,11 @@ export interface ForecastDay {
   aqi:  number  // maps from pm25Forecast.avg
 }
 
+export interface PredictedMonthlyAqi {
+  month: string // e.g. "2026-04"
+  aqi:   number
+}
+
 export interface Location {
   id: string
   name: string
@@ -20,6 +25,8 @@ export interface Location {
   recommendation?: string
   forecast?:       number[]
   forecast7d?:     ForecastDay[]
+  // Long-term (12-month) predicted AQI, matched by cityName from backend
+  predicted12m?:   PredictedMonthlyAqi[]
 }
 
 // Malaysian cities/locales from official air quality monitoring list. Data is fetched via fetchAirQualityByCity(name).
@@ -35,29 +42,6 @@ function seed(name: string): Location {
     description: '',
   }
 }
-
-// City names with real coordinates (used for geo-based AQI lookup)
-// export const locations: Location[] = [
-//   { ...seed('Kuala Lumpur'),      lat: 3.1390,  lng: 101.6869 },
-//   { ...seed('George Town'),       lat: 5.4141,  lng: 100.3288 },
-//   { ...seed('Seberang Perai'),    lat: 5.3780,  lng: 100.3980 },
-//   { ...seed('Alor Setar'),        lat: 6.1248,  lng: 100.3673 },
-//   { ...seed('Ipoh'),              lat: 4.5975,  lng: 101.0901 },
-//   { ...seed('Shah Alam'),         lat: 3.0738,  lng: 101.5183 },
-//   { ...seed('Petaling Jaya'),     lat: 3.1073,  lng: 101.6067 },
-//   { ...seed('Subang Jaya'),       lat: 3.0488,  lng: 101.5819 },
-//   { ...seed('Klang'),             lat: 3.0449,  lng: 101.4455 },
-//   { ...seed('Seremban'),          lat: 2.7260,  lng: 101.9381 },
-//   { ...seed('Malacca City'),      lat: 2.1896,  lng: 102.2501 },
-//   { ...seed('Johor Bahru'),       lat: 1.4927,  lng: 103.7414 },
-//   { ...seed('Iskandar Puteri'),   lat: 1.4324,  lng: 103.6368 },
-//   { ...seed('Pasir Gudang'),      lat: 1.4694,  lng: 103.8975 },
-//   { ...seed('Kuantan'),           lat: 3.8077,  lng: 103.3260 },
-//   { ...seed('Kuala Terengganu'), lat: 5.3296,  lng: 103.1370 },
-//   { ...seed('Kuching'),           lat: 1.5497,  lng: 110.3629 },
-//   { ...seed('Miri'),              lat: 4.3995,  lng: 113.9914 },
-//   { ...seed('Kota Kinabalu'),     lat: 5.9804,  lng: 116.0735 },
-// ]
 
 // AQI Station List with real coordinates for geo-based AQI lookup
 export const locations: Location[] = [

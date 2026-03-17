@@ -1,16 +1,16 @@
 import type { ReactNode } from 'react'
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import type { Location } from '@/data/locations'
-import { locations as staticLocations } from '@/data/locations'
 import { fetchAllFavorites, addFavorite, deleteFavorite } from '@/api/api'
+import type { FavoriteItem } from '@/api/api'
+
+// ── Settings ──────────────────────────────────────────────────────────────────
 
 export interface Settings {
   notifications: boolean
 }
 
-const DEFAULT_SETTINGS: Settings = {
-  notifications: true,
-}
+const DEFAULT_SETTINGS: Settings = { notifications: true }
 
 function readStorage<T>(key: string, fallback: T): T {
   try {
@@ -21,81 +21,98 @@ function readStorage<T>(key: string, fallback: T): T {
   }
 }
 
+// ── Context shape ─────────────────────────────────────────────────────────────
+
 interface AppContextValue {
-  favoriteIds:    string[]
-  toggleFavorite: (location: Location) => void
-  isFavorite:     (id: string) => boolean
-  settings:       Settings
-  updateSettings: (patch: Partial<Settings>) => void
+  favorites:           FavoriteItem[]
+  favoritesLoaded:     boolean
+  isFavorite:          (cityName: string) => boolean
+  toggleFavorite:      (location: Location) => void
+  removeFromFavorites: (id: number) => void
+  settings:            Settings
+  updateSettings:      (patch: Partial<Settings>) => void
 }
 
 const AppContext = createContext<AppContextValue | undefined>(undefined)
 
+// ── Provider ──────────────────────────────────────────────────────────────────
+
 export function AppProvider({ children }: { children: ReactNode }) {
-  // favoriteIds holds static location IDs (e.g. '1', '2')
-  const [favoriteIds, setFavoriteIds]       = useState<string[]>([])
-  // backendFavMap maps static location ID → backend numeric ID (needed for DELETE)
-  const [backendFavMap, setBackendFavMap]   = useState<Record<string, number>>({})
+  const [favorites,       setFavorites]       = useState<FavoriteItem[]>([])
+  const [favoritesLoaded, setFavoritesLoaded] = useState(false)
 
   const [settings, setSettings] = useState<Settings>(() => ({
     ...DEFAULT_SETTINGS,
     ...readStorage<Partial<Settings>>('myairsafe_settings', {}),
   }))
 
-  // Load favourites from API on mount; fall back to localStorage if API is unreachable
+  // Load all favourites from backend on mount — no localStorage fallback
   useEffect(() => {
     fetchAllFavorites()
       .then(items => {
-        const ids: string[] = []
-        const map: Record<string, number> = {}
-        items.forEach(item => {
-          const match = staticLocations.find(
-            l => l.name.toLowerCase() === item.cityName.toLowerCase()
-          )
-          if (match) {
-            ids.push(match.id)
-            map[match.id] = item.id
-          }
-        })
-        setFavoriteIds(ids)
-        setBackendFavMap(map)
+        setFavorites(items)
+        setFavoritesLoaded(true)
       })
       .catch(() => {
-        // API unreachable — fall back to what was saved locally
-        setFavoriteIds(readStorage<string[]>('myairsafe_favorites', []))
+        setFavoritesLoaded(true) // mark as done even on error
       })
   }, [])
 
-  // Persist settings
+  // Persist settings only (not favorites — those live in the backend)
   useEffect(() => {
     localStorage.setItem('myairsafe_settings', JSON.stringify(settings))
   }, [settings])
 
+  const isFavorite = useCallback(
+    (cityName: string) =>
+      favorites.some(f => f.cityName.toLowerCase() === cityName.toLowerCase()),
+    [favorites],
+  )
+
   const toggleFavorite = useCallback((location: Location) => {
-    const id = location.id
-    if (favoriteIds.includes(id)) {
-      // Remove
-      const backendId = backendFavMap[id]
-      if (backendId != null) {
-        deleteFavorite(backendId).catch(() => {/* silently ignore */})
-      }
-      setFavoriteIds(prev => prev.filter(i => i !== id))
-      setBackendFavMap(prev => { const n = { ...prev }; delete n[id]; return n })
+    const existing = favorites.find(
+      f => f.cityName.toLowerCase() === location.name.toLowerCase()
+    )
+    if (existing) {
+      // Already a favourite — optimistically remove, then call API
+      setFavorites(prev => prev.filter(f => f.id !== existing.id))
+      deleteFavorite(existing.id).catch(() => {
+        // Revert if API call fails
+        setFavorites(prev => [...prev, existing])
+      })
     } else {
-      // Add
+      // Not a favourite — optimistically add a temp item so the heart turns red immediately
+      const tempId: number = -Date.now()
+      const tempItem: FavoriteItem = {
+        id:        tempId,
+        cityName:  location.name,
+        latitude:  location.lat,
+        longitude: location.lng,
+        createdAt: new Date().toISOString(),
+      }
+      setFavorites(prev => [...prev, tempItem])
       addFavorite(location.name, location.lat, location.lng)
         .then(item => {
-          setBackendFavMap(prev => ({ ...prev, [id]: item.id }))
+          // Swap temp item with the real backend item (gives us the real id for deletion)
+          setFavorites(prev => prev.map(f => f.id === tempId ? item : f))
         })
-        .catch(() => {/* silently ignore */})
-      setFavoriteIds(prev => [...prev, id])
+        .catch(() => {
+          // Re-sync from backend: the item may have been saved even if the response failed to parse.
+          // This avoids incorrectly reverting a successful add.
+          fetchAllFavorites()
+            .then(items => setFavorites(items))
+            .catch(() => {
+              // Only revert if the backend is truly unreachable
+              setFavorites(prev => prev.filter(f => f.id !== tempId))
+            })
+        })
     }
-  }, [favoriteIds, backendFavMap])
+  }, [favorites])
 
-  const isFavorite = useCallback(
-    (id: string) => favoriteIds.includes(id),
-    [favoriteIds],
-  )
+  const removeFromFavorites = useCallback((id: number) => {
+    deleteFavorite(id).catch(() => {})
+    setFavorites(prev => prev.filter(f => f.id !== id))
+  }, [])
 
   const updateSettings = useCallback((patch: Partial<Settings>) => {
     setSettings(prev => ({ ...prev, ...patch }))
@@ -103,7 +120,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppContext.Provider
-      value={{ favoriteIds, toggleFavorite, isFavorite, settings, updateSettings }}
+      value={{ favorites, favoritesLoaded, isFavorite, toggleFavorite, removeFromFavorites, settings, updateSettings }}
     >
       {children}
     </AppContext.Provider>

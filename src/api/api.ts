@@ -1,8 +1,8 @@
 import { getStatusDescription } from '@/data/locations'
 import type { Location } from '@/data/locations'
 
-// const BASE_URL = 'http://localhost:8080'
-const BASE_URL = 'https://futurestack.webhop.me'
+const BASE_URL = 'http://localhost:8080'
+// const BASE_URL = 'https://futurestack.webhop.me'
 
 // ── Response shapes ───────────────────────────────────────────────────────────
 export interface AirQualityResponse {
@@ -29,6 +29,16 @@ export interface FavoriteItem {
   latitude:  number
   longitude: number
   createdAt: string
+}
+
+export interface PredictedAqiMonth {
+  month: string // e.g. "2026-04"
+  predictedAqi: number
+}
+
+export interface CityAqiForecast {
+  cityName: string
+  predictions: PredictedAqiMonth[]
 }
 
 // Backwards-compatible alias used by existing hooks
@@ -62,6 +72,13 @@ export async function fetchAirQualityByCoords(latitude: number, longitude: numbe
 // GET /api/airQuality/airQualityByCityOrLocation?city=xxx
 export async function fetchAirQualityByCity(city: string): Promise<AirQualityResponse> {
   const res = await fetch(`${BASE_URL}/api/airQuality/airQualityByCityOrLocation?city=${encodeURIComponent(city)}`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
+
+// GET /api/airQuality/predictedAqiNext12Months
+export async function fetchPredictedAqiNext12Months(): Promise<CityAqiForecast[]> {
+  const res = await fetch(`${BASE_URL}/api/airQuality/predictedAqiNext12Months`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()
 }
@@ -113,6 +130,21 @@ export interface GeocodingSuggestion {
   }
 }
 
+export interface ReverseGeocodeResult {
+  place_id:     number
+  display_name: string
+  lat:          string
+  lon:          string
+  address: {
+    city?:    string
+    town?:    string
+    village?: string
+    suburb?:  string
+    county?:  string
+    state?:   string
+  }
+}
+
 // Nominatim free geocoder — Malaysia only, no API key required
 export async function fetchGeocodingSuggestions(query: string): Promise<GeocodingSuggestion[]> {
   const url =
@@ -122,6 +154,20 @@ export async function fetchGeocodingSuggestions(query: string): Promise<Geocodin
   const res = await fetch(url, { headers: { 'Accept-Language': 'en' } })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()
+}
+
+// Reverse geocoding: lat/lon -> best-effort city-like name (city/town/village/suburb)
+export async function reverseGeocodeCity(lat: number, lon: number): Promise<string | null> {
+  const url =
+    `https://nominatim.openstreetmap.org/reverse` +
+    `?lat=${encodeURIComponent(String(lat))}` +
+    `&lon=${encodeURIComponent(String(lon))}` +
+    `&format=json&addressdetails=1`
+  const res = await fetch(url, { headers: { 'Accept-Language': 'en' } })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const data = (await res.json()) as ReverseGeocodeResult
+  const addr = data.address || {}
+  return addr.city || addr.town || addr.village || addr.suburb || null
 }
 
 // ── Data mapping helpers ──────────────────────────────────────────────────────
