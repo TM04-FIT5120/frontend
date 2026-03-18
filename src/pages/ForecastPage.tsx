@@ -409,7 +409,7 @@ export function ForecastPage() {
     }
   }, [location])
 
-  const isHighAqiTest = import.meta.env.DEV && searchParams.get('testHighAqi') === '1'
+  const isHighAqiTest = import.meta.env.PROD && searchParams.get('testHighAqi') === '1'
   const currentCityKey = location ? (canonicalCityName ?? location.name) : ''
   const isViewingAlorSetarForTest = isHighAqiTest && currentCityKey === 'Alor Setar'
 

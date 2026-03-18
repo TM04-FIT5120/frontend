@@ -420,7 +420,7 @@ export function HomePage() {
 
   const hasElevatedAqi = warnCount > 0
   const hasUpcomingUnhealthyFromTest =
-    import.meta.env.DEV && (devTestUpcomingPredictions?.some(p => p.predictedAqi > 100) ?? false)
+    import.meta.env.PROD && (devTestUpcomingPredictions?.some(p => p.predictedAqi > 100) ?? false)
   const shouldShowHighRiskNotice =
     isApproachingHighRiskPeriod() || hasElevatedAqi || hasUpcomingUnhealthyFromTest
 
@@ -516,7 +516,7 @@ export function HomePage() {
             >
               <MapPin size={16} /> Search Area
             </button>
-            {import.meta.env.DEV && (
+            {import.meta.env.PROD && (
               <button
                 onClick={() => setShowHighRiskTestModal(true)}
                 style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '0.75rem 1.5rem', borderRadius: 12, border: '1.5px solid rgba(255,255,255,0.5)', background: 'rgba(239,68,68,0.18)', color: '#fee2e2', fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer' }}
@@ -588,7 +588,7 @@ export function HomePage() {
           onClick={() => {
             setShowHighRiskPopup(false)
             setHighRiskTestActive(false)
-            if (import.meta.env.DEV) setDevTestUpcomingPredictions(null)
+            if (import.meta.env.PROD) setDevTestUpcomingPredictions(null)
           }}
         >
           <div
@@ -629,7 +629,7 @@ export function HomePage() {
                 onClick={() => {
                   setShowHighRiskPopup(false)
                   setHighRiskTestActive(false)
-                  if (import.meta.env.DEV) setDevTestUpcomingPredictions(null)
+                  if (import.meta.env.PROD) setDevTestUpcomingPredictions(null)
                 }}
                 style={{ background: 'transparent', border: 'none', color: '#fee2e2', cursor: 'pointer' }}
               >
@@ -672,12 +672,12 @@ export function HomePage() {
                 type="button"
                 onClick={() => {
                   setShowHighRiskPopup(false)
-                  if (highRiskTestActive && import.meta.env.DEV) {
+                  if (highRiskTestActive && import.meta.env.PROD) {
                     navigate(`/forecast?location=${encodeURIComponent('Alor Setar')}&tab=long&testHighAqi=1`)
                   } else {
                     navigate('/forecast?tab=long')
                   }
-                  if (import.meta.env.DEV) setHighRiskTestActive(false)
+                  if (import.meta.env.PROD) setHighRiskTestActive(false)
                 }}
                 style={{
                   marginTop: 18,
@@ -702,7 +702,7 @@ export function HomePage() {
                 onClick={() => {
                   setShowHighRiskPopup(false)
                   setHighRiskTestActive(false)
-                  if (import.meta.env.DEV) setDevTestUpcomingPredictions(null)
+                  if (import.meta.env.PROD) setDevTestUpcomingPredictions(null)
                 }}
                 style={{
                   width: '100%',
@@ -725,7 +725,7 @@ export function HomePage() {
       )}
 
       {/* Development-only test modal to simulate upcoming high-risk months */}
-      {import.meta.env.DEV && showHighRiskTestModal && (
+      {import.meta.env.PROD && showHighRiskTestModal && (
         <div
           style={{
             position: 'fixed',
