@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { MapPin, ChevronRight, ArrowLeft, FlaskConical } from 'lucide-react'
+import { MapPin, ChevronRight, ArrowLeft } from 'lucide-react'
 import { getAQIMeta, aqiPercent } from '@/utils/aqiHelpers'
 import type { AQIStatus } from '@/utils/aqiHelpers'
 
