@@ -8,6 +8,7 @@ import { ForecastPage } from '@/pages/ForecastPage'
 import { CompareLocationsPage } from '@/pages/CompareLocationsPage'
 import { LocationDetailPage } from '@/pages/LocationDetailPage'
 import { GuidePage } from '@/pages/GuidePage'
+import { TestAqiPage } from '@/pages/TestAqiPage'
 
 export function AppRoutes() {
   return (
@@ -21,6 +22,7 @@ export function AppRoutes() {
         <Route path="settings" element={<SettingsPage />} />
         <Route path="compare" element={<CompareLocationsPage />} />
         <Route path="location/:cityName" element={<LocationDetailPage />} />
+        {import.meta.env.DEV && <Route path="test-aqi" element={<TestAqiPage />} />}
       </Route>
     </Routes>
   )

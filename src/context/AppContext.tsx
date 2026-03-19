@@ -46,7 +46,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     ...readStorage<Partial<Settings>>('myairsafe_settings', {}),
   }))
 
-  // Load all favourites from backend on mount — no localStorage fallback
+  // Load all favourites from backend on mount
   useEffect(() => {
     fetchAllFavorites()
       .then(items => {
@@ -58,7 +58,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       })
   }, [])
 
-  // Persist settings only (not favorites — those live in the backend)
+  // Persist settings only
   useEffect(() => {
     localStorage.setItem('myairsafe_settings', JSON.stringify(settings))
   }, [settings])
@@ -74,14 +74,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       f => f.cityName.toLowerCase() === location.name.toLowerCase()
     )
     if (existing) {
-      // Already a favourite — optimistically remove, then call API
+      // Already a favourite, optimistically remove, then call API
       setFavorites(prev => prev.filter(f => f.id !== existing.id))
       deleteFavorite(existing.id).catch(() => {
         // Revert if API call fails
         setFavorites(prev => [...prev, existing])
       })
     } else {
-      // Not a favourite — optimistically add a temp item so the heart turns red immediately
+      // Not a favourite, optimistically add a temp item so the heart turns red immediately
       const tempId: number = -Date.now()
       const tempItem: FavoriteItem = {
         id:        tempId,

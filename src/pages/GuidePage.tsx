@@ -470,7 +470,7 @@ export function GuidePage() {
           number={1}
           title="Open the Home page"
           description="When you open MyAirSafe you land on the Home page. When you scroll down a little you will see a map of Malaysia and a list of city air quality readings."
-          imageCaption="Home page — overview of the map and city list"
+          imageCaption="Home page, overview of the map and city list"
           imageSrc="/1.1.png"
         />
         <StepRow
@@ -490,7 +490,7 @@ export function GuidePage() {
         <StepRow
           number={4}
           title="Read the health advice and use Forecast"
-          description='Below your AQI you will see a short message such as "Air is Good — Safe to go outside", written for seniors. Use the "Short-term Forecast" and "Long-term Forecast" buttons to plan outdoor activities. "View Full Details" takes you to the city detail page with more information.'
+          description='Below your AQI you will see a short message such as "Air is Good, Safe to go outside", written for seniors. Use the "Short-term Forecast" and "Long-term Forecast" buttons to plan outdoor activities. "View Full Details" takes you to the city detail page with more information.'
           imageCaption="Health advice and Forecast buttons on the right panel"
           imageSrc="/1.4.png"
         />
@@ -570,14 +570,14 @@ export function GuidePage() {
         <StepRow
           number={4}
           title="Check the Upcoming Days (Short-Term tab)"
-          description="Below the 24-hour card, the Upcoming Days section lists each day from the day after tomorrow onwards. Each row shows the day name and date, the predicted AQI number with its status label, the health advice for that day, and the senior-focused shield note. Days with higher AQI are highlighted in red or orange tones — these are the days to consider staying indoors."
+          description="Below the 24-hour card, the Upcoming Days section lists each day from the day after tomorrow onwards. Each row shows the day name and date, the predicted AQI number with its status label, the health advice for that day, and the senior-focused shield note. Days with higher AQI are highlighted in red or orange tones, these are the days to consider staying indoors."
           imageCaption="Upcoming days list with day, AQI, status badge, and health advice per row"
           imageSrc="/3.4.png"
         />
         <StepRow
           number={5}
           title="View the 12-Month Prediction (Long-Term tab)"
-          description='Switch to the "Long-Term Forecast" tab. If prediction data is available for your city (based on 2 years of historical AQI data), you will see a grid of the next 12 months — each tile shows the month name, the predicted average AQI, a colour-coded status badge, and health advice. Months falling in the Haze Season (June–October) are flagged in red with an extra warning.'
+          description='Switch to the "Long-Term Forecast" tab. If prediction data is available for your city (based on 2 years of historical AQI data), you will see a grid of the next 12 months, each tile shows the month name, the predicted average AQI, a colour-coded status badge, and health advice. Months falling in the Haze Season (June–October) are flagged in red with an extra warning.'
           imageCaption="12-month prediction grid with colour-coded monthly AQI tiles"
           imageSrc="/3.5.png"
         />
@@ -588,7 +588,7 @@ export function GuidePage() {
           imageCaption="High-risk period calendar showing haze season months highlighted in red"
           imageSrc="/3.6.png"
         />
-        <Tip text="Check the Short-Term Forecast the night before any outdoor activity — if the next 24 hours show Unhealthy or worse, plan an indoor alternative. Use the Long-Term tab at the start of each month to prepare for the months ahead." />
+        <Tip text="Check the Short-Term Forecast the night before any outdoor activity. If the next 24 hours show Unhealthy or worse, plan an indoor alternative. Use the Long-Term tab at the start of each month to prepare for the months ahead." />
       </Section>
 
       {/* ── 4. Compare Cities ────────────────────────────────────────────────────── */}
@@ -635,7 +635,7 @@ export function GuidePage() {
           imageCaption="Comparison Summary card with AQI difference and senior recommendation"
           imageSrc="/4.5.png"
         />
-        <Tip text="Use Compare before planning a morning walk — pick your city and a nearby town to see where the air is cleaner that day." />
+        <Tip text="Use Compare before planning a morning walk; pick your city and a nearby town to see where the air is cleaner that day." />
       </Section>
 
       {/* ── 5. Favourites ────────────────────────────────────────────────────── */}
@@ -658,7 +658,7 @@ export function GuidePage() {
           number={2}
           title="Tap the heart icon"
           description="On the detail page click the heart icon (♥) near the city name. It turns red to confirm the city is saved to your Favourites."
-          imageCaption="Heart icon highlighted — showing the red saved state"
+          imageCaption="Heart icon highlighted, showing the red saved state"
           imageSrc="/5.2.png"
         />
         <StepRow
@@ -704,7 +704,7 @@ export function GuidePage() {
         <StepRow
           number={2}
           title="Turn on air quality alerts"
-          description="Under General, toggle Air Quality Alerts to ON (blue). Your browser will ask permission — click Allow. You will be notified when air quality is poor."
+          description="Under General, toggle Air Quality Alerts to ON (blue). Your browser will ask permission, click Allow. You will be notified when air quality is poor."
           imageCaption="Notifications toggle in the ON (blue) position"
           imageSrc="/6.2.png"
         />

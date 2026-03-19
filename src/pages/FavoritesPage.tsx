@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Heart, Trash2, ArrowRight, BookmarkPlus, Loader2, AlertCircle } from 'lucide-react'
-import { getAQIMeta, aqiPercent } from '@/utils/aqiHelpers'
+import { getAQIMeta, aqiPercent, getRandomElderNote } from '@/utils/aqiHelpers'
 import { useAppContext } from '@/context/AppContext'
 import { strings } from '@/strings'
 import { fetchAirQualityByCoords, airQualityToLocation } from '@/api/api'
@@ -206,7 +206,7 @@ export function FavoritesPage() {
                     </p>
 
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: meta.bgColor, border: `1px solid ${meta.borderColor}`, borderRadius: 10, padding: '0.35rem 0.8rem', fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', color: meta.color, fontWeight: 600 }}>
-                      {meta.elderNote}
+                      {getRandomElderNote(location.status)}
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 12, color: '#1d4ed8', fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 600 }}>
