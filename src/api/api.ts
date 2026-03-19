@@ -192,7 +192,7 @@ export function apiDataToLocation(staticLoc: Location, apiData: AirQualityRespon
   }
 }
 
-// Build a standalone Location from a raw API response (no static loc needed — e.g. user coordinates)
+// Build a standalone Location from a raw API response (no static loc needed e.g. user coordinates)
 export function airQualityToLocation(apiData: AirQualityResponse): Location {
   const status = aqiToStatus(apiData.aqi)
   return {

@@ -5,11 +5,11 @@ import {
   Navigation, Loader2, MapPin,
   AlertTriangle, ArrowRight, ChevronRight,
   X, ShieldCheck, Wind, Thermometer,
-  LocateFixed, Info, Heart,
+  LocateFixed, Info, Heart, FlaskConical,
 } from 'lucide-react'
 import { isApproachingHighRiskPeriod } from '@/pages/ForecastPage'
 import type { Location } from '@/data/locations'
-import { getAQIMeta, aqiPercent } from '@/utils/aqiHelpers'
+import { getAQIMeta, aqiPercent, getRandomElderNote } from '@/utils/aqiHelpers'
 import { useLocations } from '@/hooks/useLocations'
 import { useAppContext } from '@/context/AppContext'
 import { AirQualityMap } from '@/components/AirQualityMap'
@@ -202,7 +202,7 @@ function LocationDetailPanel({
           <Wind size={15} color="#64748b" style={{ flexShrink: 0, marginTop: 1 }} />
           <div>
             <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600, margin: '0 0 1px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Advisory</p>
-            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 500, color: '#334155', margin: 0, lineHeight: 1.5 }}>{meta.elderNote}</p>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', fontWeight: 500, color: '#334155', margin: 0, lineHeight: 1.5 }}>{getRandomElderNote(loc.status)}</p>
           </div>
         </div>
       </div>
@@ -392,7 +392,7 @@ function StationCard({ loc, delay }: { loc: Location; delay: number }) {
         <div style={{ height: '100%', width: `${aqiPercent(loc.aqi)}%`, background: meta.color, borderRadius: 999 }} />
       </div>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: '#4a5568', margin: 0, lineHeight: 1.5, flex: 1 }}>{meta.elderNote}</p>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: '#4a5568', margin: 0, lineHeight: 1.5, flex: 1 }}>{getRandomElderNote(loc.status)}</p>
         <ChevronRight size={15} color="#8a96a8" style={{ flexShrink: 0, marginTop: 2 }} />
       </div>
     </div>
@@ -420,11 +420,11 @@ export function HomePage() {
 
   const hasElevatedAqi = warnCount > 0
   const hasUpcomingUnhealthyFromTest =
-    import.meta.env.PROD && (devTestUpcomingPredictions?.some(p => p.predictedAqi > 100) ?? false)
+    import.meta.env.DEV && (devTestUpcomingPredictions?.some(p => p.predictedAqi > 100) ?? false)
   const shouldShowHighRiskNotice =
     isApproachingHighRiskPeriod() || hasElevatedAqi || hasUpcomingUnhealthyFromTest
 
-  // When dummy data has high AQI, that is the reason the alert should show — open the popup automatically.
+  // When dummy data has high AQI, open the popup automatically.
   useEffect(() => {
     if (hasUpcomingUnhealthyFromTest) {
       setHighRiskTestActive(true)
@@ -516,12 +516,20 @@ export function HomePage() {
             >
               <MapPin size={16} /> Search Area
             </button>
-            {import.meta.env.PROD && (
+            {import.meta.env.DEV && (
               <button
                 onClick={() => setShowHighRiskTestModal(true)}
                 style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '0.75rem 1.5rem', borderRadius: 12, border: '1.5px solid rgba(255,255,255,0.5)', background: 'rgba(239,68,68,0.18)', color: '#fee2e2', fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer' }}
               >
                 <AlertTriangle size={16} /> Test High-Risk Alert
+              </button>
+            )}
+            {import.meta.env.DEV && (
+              <button
+                onClick={() => navigate('/test-aqi')}
+                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '0.75rem 1.5rem', borderRadius: 12, border: '1.5px solid rgba(255,255,255,0.5)', background: 'rgba(124,58,237,0.18)', color: '#ede9fe', fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer' }}
+              >
+                <FlaskConical size={16} /> Test AQI Categories
               </button>
             )}
           </div>
@@ -588,7 +596,7 @@ export function HomePage() {
           onClick={() => {
             setShowHighRiskPopup(false)
             setHighRiskTestActive(false)
-            if (import.meta.env.PROD) setDevTestUpcomingPredictions(null)
+            if (import.meta.env.DEV) setDevTestUpcomingPredictions(null)
           }}
         >
           <div
@@ -629,7 +637,7 @@ export function HomePage() {
                 onClick={() => {
                   setShowHighRiskPopup(false)
                   setHighRiskTestActive(false)
-                  if (import.meta.env.PROD) setDevTestUpcomingPredictions(null)
+                  if (import.meta.env.DEV) setDevTestUpcomingPredictions(null)
                 }}
                 style={{ background: 'transparent', border: 'none', color: '#fee2e2', cursor: 'pointer' }}
               >
@@ -672,12 +680,12 @@ export function HomePage() {
                 type="button"
                 onClick={() => {
                   setShowHighRiskPopup(false)
-                  if (highRiskTestActive && import.meta.env.PROD) {
+                  if (highRiskTestActive && import.meta.env.DEV) {
                     navigate(`/forecast?location=${encodeURIComponent('Alor Setar')}&tab=long&testHighAqi=1`)
                   } else {
                     navigate('/forecast?tab=long')
                   }
-                  if (import.meta.env.PROD) setHighRiskTestActive(false)
+                  if (import.meta.env.DEV) setHighRiskTestActive(false)
                 }}
                 style={{
                   marginTop: 18,
@@ -702,7 +710,7 @@ export function HomePage() {
                 onClick={() => {
                   setShowHighRiskPopup(false)
                   setHighRiskTestActive(false)
-                  if (import.meta.env.PROD) setDevTestUpcomingPredictions(null)
+                  if (import.meta.env.DEV) setDevTestUpcomingPredictions(null)
                 }}
                 style={{
                   width: '100%',
@@ -725,7 +733,7 @@ export function HomePage() {
       )}
 
       {/* Development-only test modal to simulate upcoming high-risk months */}
-      {import.meta.env.PROD && showHighRiskTestModal && (
+      {import.meta.env.DEV && showHighRiskTestModal && (
         <div
           style={{
             position: 'fixed',
@@ -782,7 +790,7 @@ export function HomePage() {
             >
               <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: '#7c2d12', margin: 0 }}>
                 Dummy scenario: <strong>Next month</strong> and the month after are predicted to have AQI levels in the{' '}
-                <strong>Unhealthy</strong> range for multiple stations.
+                <strong>Unhealthy</strong> range.
               </p>
             </div>
 

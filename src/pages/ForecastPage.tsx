@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { Calendar, TrendingUp, AlertTriangle, Shield, MapPin, Search, Wind, CheckCircle2, XCircle, Info, Loader2 } from 'lucide-react'
-import { getAQIMeta } from '@/utils/aqiHelpers'
+import { getAQIMeta, getRandomElderNote } from '@/utils/aqiHelpers'
 import { aqiToStatus, fetchPredictedAqiNext12Months, reverseGeocodeCity, type CityAqiForecast } from '@/api/api'
 import type { Location, PredictedMonthlyAqi } from '@/data/locations'
 import { useLocations } from '@/hooks/useLocations'
@@ -100,7 +100,7 @@ function ShortTermTab({ location }: { location: Location }) {
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, background: meta.bgColor, border: `1px solid ${meta.borderColor}`, borderRadius: 10, padding: '0.6rem 0.75rem' }}>
                   <Shield size={15} color={meta.color} style={{ flexShrink: 0, marginTop: 2 }} />
                   <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: meta.color, margin: 0, lineHeight: 1.6, fontWeight: 500 }}>
-                    <strong>Note:</strong> {meta.elderNote}
+                    <strong>Note:</strong> {getRandomElderNote(status)}
                   </p>
                 </div>
               </div>
@@ -162,7 +162,7 @@ function ShortTermTab({ location }: { location: Location }) {
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, background: `${meta.color}10`, borderRadius: 8, padding: '0.4rem 0.6rem' }}>
                       <Shield size={13} color={meta.color} style={{ flexShrink: 0, marginTop: 2 }} />
                       <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.76rem', color: meta.color, margin: 0, lineHeight: 1.5, fontWeight: 500 }}>
-                        <strong>Note:</strong> {meta.elderNote}
+                        <strong>Note:</strong> {getRandomElderNote(status)}
                       </p>
                     </div>
                   </div>
@@ -409,7 +409,7 @@ export function ForecastPage() {
     }
   }, [location])
 
-  const isHighAqiTest = import.meta.env.PROD && searchParams.get('testHighAqi') === '1'
+  const isHighAqiTest = import.meta.env.DEV && searchParams.get('testHighAqi') === '1'
   const currentCityKey = location ? (canonicalCityName ?? location.name) : ''
   const isViewingAlorSetarForTest = isHighAqiTest && currentCityKey === 'Alor Setar'
 
